@@ -14,6 +14,7 @@ import MuslimOwnedBusinesses from './pages/learn/MuslimOwnedBusinesses';
 import QahwahHouse from './pages/learn/articles/qahwah-house';
 import Qamaria from './pages/learn/articles/Qamaria';
 import HalalGuys from './pages/learn/articles/halal-guys';
+import CarDetailingBusiness from './pages/learn/articles/car-detailing-business';
 
 const theme = createTheme({
   palette: {
@@ -195,6 +196,17 @@ function App() {
                 <>
                   <Navbar />
                   <HalalGuys />
+                </>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/learn/articles/car-detailing-business"
+            element={
+              <ProtectedRoute>
+                <>
+                  <Navbar />
+                  <CarDetailingBusiness />
                 </>
               </ProtectedRoute>
             }
