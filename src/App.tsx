@@ -15,6 +15,11 @@ import QahwahHouse from './pages/learn/articles/qahwah-house';
 import Qamaria from './pages/learn/articles/Qamaria';
 import HalalGuys from './pages/learn/articles/halal-guys';
 import CarDetailingBusiness from './pages/learn/articles/car-detailing-business';
+import LuxuryHomeCleaning from './pages/learn/articles/luxury-home-cleaning';
+import PetGroomingVan from './pages/learn/articles/pet-grooming-van';
+import LandscapingBusiness from './pages/learn/articles/landscaping-business';
+import BalloonGarlandSetup from './pages/learn/articles/balloon-garland-setup';
+import ProfilePage from './pages/profile/ProfilePage';
 
 const theme = createTheme({
   palette: {
@@ -207,6 +212,72 @@ function App() {
                 <>
                   <Navbar />
                   <CarDetailingBusiness />
+                </>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/learn/articles/luxury-home-cleaning"
+            element={
+              <ProtectedRoute>
+                <>
+                  <Navbar />
+                  <LuxuryHomeCleaning />
+                </>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/learn/articles/pet-grooming-van"
+            element={
+              <ProtectedRoute>
+                <>
+                  <Navbar />
+                  <PetGroomingVan />
+                </>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/learn/articles/landscaping-business"
+            element={
+              <ProtectedRoute>
+                <>
+                  <Navbar />
+                  <LandscapingBusiness />
+                </>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/learn/articles/balloon-garland-setup"
+            element={
+              <ProtectedRoute>
+                <>
+                  <Navbar />
+                  <BalloonGarlandSetup />
+                </>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile/:userId"
+            element={
+              <ProtectedRoute>
+                <>
+                  <Navbar />
+                  <ProfilePage />
+                </>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <>
+                  <Navbar />
+                  <ProfilePage />
                 </>
               </ProtectedRoute>
             }

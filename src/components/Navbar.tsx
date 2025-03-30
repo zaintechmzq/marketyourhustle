@@ -35,6 +35,7 @@ import {
   Mosque as MosqueIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { auth } from '../firebase/config';
 
 const categories = [
   { name: 'Wedding Services', icon: <CelebrationIcon /> },
@@ -76,7 +77,8 @@ const Navbar = () => {
   };
 
   const handleCategoryClick = (category: string) => {
-    navigate(`/category/${category.toLowerCase().replace(/\s+/g, '-')}`);
+    const formattedCategory = category.toLowerCase().replace(/\s+&\s+/g, '-and-').replace(/\s+/g, '-');
+    navigate(`/category/${formattedCategory}`);
     handleClose();
   };
 
@@ -114,6 +116,12 @@ const Navbar = () => {
             <ListItemText primary={category.name} />
           </ListItem>
         ))}
+        {userEmail && (
+          <ListItem button onClick={() => navigate(`/profile/${auth.currentUser?.uid}`)}>
+            <ListItemIcon><PersonIcon /></ListItemIcon>
+            <ListItemText primary="Profile" />
+          </ListItem>
+        )}
         <Divider />
         <ListItem button onClick={handleSignOut}>
           <ListItemIcon><ExitToAppIcon /></ListItemIcon>
@@ -186,6 +194,15 @@ const Navbar = () => {
             >
               Dashboard
             </Button>
+            {userEmail && (
+              <Button
+                color="inherit"
+                startIcon={<PersonIcon />}
+                onClick={() => navigate(`/profile/${auth.currentUser?.uid}`)}
+              >
+                Profile
+              </Button>
+            )}
             {userEmail ? (
               <Button
                 color="inherit"

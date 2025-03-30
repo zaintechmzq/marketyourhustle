@@ -1,0 +1,71 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Posts collection
+    match /posts/{postId} {
+      allow read: if true;
+      allow create: if isAuthenticated() 
+        && request.resource.data.authorId == request.auth.uid
+        && request.resource.data.likes == 0
+        && request.resource.data.likedBy == []
+        && request.resource.data.commentCount == 0;
+      allow update: if isAuthenticated() 
+        && (
+          // Allow author to update content
+          (resource.data.authorId == request.auth.uid && 
+           request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['content', 'title', 'category', 'tags', 'updatedAt'])) ||
+          // Allow any authenticated user to like/unlike
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['likes', 'likedBy', 'commentCount'])
+        );
+      allow delete: if isOwner(resource.data.authorId);
+    }
+
+    // Comments collection
+    match /comments/{commentId} {
+      allow read: if true;
+      allow create: if isAuthenticated() 
+        && request.resource.data.authorId == request.auth.uid
+        && request.resource.data.likes == 0
+        && request.resource.data.likedBy == [];
+      allow update: if isAuthenticated() 
+        && (
+          // Allow author to update content
+          (resource.data.authorId == request.auth.uid && 
+           request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['content', 'updatedAt'])) ||
+          // Allow any authenticated user to like/unlike
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['likes', 'likedBy'])
+        );
+      allow delete: if isOwner(resource.data.authorId);
+    }
+
+    // Notifications collection
+    match /notifications/{notificationId} {
+      allow read: if isOwner(resource.data.userId);
+      allow create: if isAuthenticated();
+      allow update: if isOwner(resource.data.userId) 
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+      allow delete: if isOwner(resource.data.userId);
+    }
+
+    // User profiles collection
+    match /users/{userId} {
+      allow read: if true;
+      allow create, update: if isOwner(userId);
+      allow delete: if false; // Don't allow user deletion through client
+    }
+  }
+} 

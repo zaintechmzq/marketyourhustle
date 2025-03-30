@@ -25,20 +25,12 @@ const MotionBox = motion(Box);
 const Home = () => {
   const featuredStories = [
     {
-      title: "Qahwah House",
-      description: "Modern coffee experience with traditional roots",
-      image: qawahHouseImg,
-      path: "/learn/articles/qahwah-house",
+      title: "AutoShine Pro",
+      description: "From side hustle to premium car detailing service",
+      image: "https://images.unsplash.com/photo-1507136566006-cfc505b114fc?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80",
+      path: "/learn/articles/car-detailing-business",
       readTime: "10 min read",
-      revenue: "$50,000+"
-    },
-    {
-      title: "Qamaria",
-      description: "Middle Eastern coffee culture reimagined",
-      image: qamariaImg,
-      path: "/learn/articles/qamaria",
-      readTime: "8 min read",
-      revenue: "$40,000+"
+      revenue: "$15,000+"
     },
     {
       title: "The Halal Guys",
@@ -46,47 +38,55 @@ const Home = () => {
       image: halalGuysImg,
       path: "/learn/articles/halal-guys",
       readTime: "12 min read",
-      revenue: "$100,000+"
+      revenue: "$50,000+"
     },
     {
-      title: "Halal Food Cart",
-      description: "Street food success story",
-      image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&q=80",
-      path: "/learn/articles/halal-food-cart",
-      readTime: "6 min read",
-      revenue: "$30,000+"
+      title: "Luxury Home Cleaning",
+      description: "Premium cleaning service targeting high-end residential clients",
+      image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80",
+      path: "/learn/articles/luxury-home-cleaning",
+      readTime: "8 min read",
+      revenue: "$12,000+"
     },
     {
-      title: "Islamic Fashion",
-      description: "Modern modest fashion brand",
-      image: "https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&q=80",
-      path: "/learn/articles/islamic-fashion",
-      readTime: "9 min read",
-      revenue: "$45,000+"
-    },
-    {
-      title: "Halal Tech",
-      description: "Muslim-focused tech solutions",
-      image: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80",
-      path: "/learn/articles/halal-tech",
-      readTime: "11 min read",
-      revenue: "$75,000+"
-    },
-    {
-      title: "Islamic Finance",
-      description: "Sharia-compliant financial services",
-      image: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&q=80",
-      path: "/learn/articles/islamic-finance",
-      readTime: "7 min read",
-      revenue: "$60,000+"
-    },
-    {
-      title: "Halal Travel",
-      description: "Muslim-friendly travel platform",
-      image: "https://images.unsplash.com/photo-1437846972679-9e6e537be46e?auto=format&fit=crop&q=80",
-      path: "/learn/articles/halal-travel",
+      title: "Pet Grooming Van",
+      description: "Mobile pet grooming service that brings luxury care directly to customers' homes",
+      image: "https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80",
+      path: "/learn/articles/pet-grooming-van",
       readTime: "10 min read",
-      revenue: "$55,000+"
+      revenue: "$20,000+"
+    },
+    {
+      title: "Qahwah House",
+      description: "Modern coffee experience with traditional roots",
+      image: qawahHouseImg,
+      path: "/learn/articles/qahwah-house",
+      readTime: "9 min read",
+      revenue: "$15,000+"
+    },
+    {
+      title: "Qamaria",
+      description: "Middle Eastern coffee culture reimagined",
+      image: qamariaImg,
+      path: "/learn/articles/qamaria",
+      readTime: "10 min read",
+      revenue: "$40,000+"
+    },
+    {
+      title: "Landscaping Business",
+      description: "From side hustle to full-service landscaping operation",
+      image: "https://www.rocketlawyer.com/binaries/content/gallery/guide-hero-images/US/how-to-start-a-landscaping-business-1173342162.jpg",
+      path: "/learn/articles/landscaping-business",
+      readTime: "10 min read",
+      revenue: "$25,000+"
+    },
+    {
+      title: "Event Decor & Rentals",
+      description: "Full-service event decoration and rental company",
+      image: "https://images.unsplash.com/photo-1478146059778-26028b07395a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80",
+      path: "/learn/articles/event-decor-rentals",
+      readTime: "11 min read",
+      revenue: "$30,000+"
     }
   ];
 
@@ -126,58 +126,37 @@ const Home = () => {
                 fontWeight: 400
               }}
             >
-              Discover successful Muslim-owned businesses and learn how they built their empires
+              Discover successful service-based businesses and learn how they built their empires. From side hustles to 7-figure companies.
             </Typography>
 
-            <Box sx={{ mb: 4 }}>
-              <Grid container spacing={2} justifyContent="center">
-                <Grid item xs={12} sm={6} md={4}>
-                  <TextField
-                    fullWidth
-                    placeholder="Enter your email"
-                    variant="outlined"
-                    sx={{ 
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: '8px',
-                        bgcolor: 'background.paper',
-                        '&:hover fieldset': {
-                          borderColor: 'primary.main',
-                        },
-                      },
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={4} md={3}>
-                  <Button 
-                    variant="contained" 
-                    fullWidth 
-                    size="large"
-                    sx={{ 
-                      height: '56px',
-                      borderRadius: '8px',
-                      textTransform: 'none',
-                      fontSize: '1rem'
-                    }}
-                  >
-                    Subscribe
-                  </Button>
-                </Grid>
-              </Grid>
+            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <Button 
+                variant="contained" 
+                size="large"
+                component={RouterLink}
+                to="/community"
+                sx={{ 
+                  borderRadius: '8px',
+                  textTransform: 'none',
+                  fontSize: '1rem'
+                }}
+              >
+                Join Our Community
+              </Button>
+              <Button 
+                variant="outlined" 
+                size="large"
+                component={RouterLink}
+                to="/learn"
+                sx={{ 
+                  borderRadius: '8px',
+                  textTransform: 'none',
+                  fontSize: '1rem'
+                }}
+              >
+                Browse Success Stories
+              </Button>
             </Box>
-
-            <Typography 
-              variant="body2" 
-              sx={{ 
-                color: 'text.secondary',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 1
-              }}
-            >
-              <GroupIcon sx={{ fontSize: 20 }} />
-              Join 5,000+ Muslim entrepreneurs
-            </Typography>
           </MotionBox>
         </Container>
       </Box>
@@ -271,71 +250,6 @@ const Home = () => {
           ))}
         </Grid>
       </Container>
-
-      {/* Newsletter Section */}
-      <Box sx={{ 
-        py: 8,
-        bgcolor: 'background.paper',
-        borderTop: '1px solid',
-        borderColor: 'divider'
-      }}>
-        <Container maxWidth="md">
-          <Box sx={{ textAlign: 'center' }}>
-            <Typography 
-              variant="h4" 
-              sx={{ 
-                mb: 2,
-                fontWeight: 600,
-                color: 'text.primary'
-              }}
-            >
-              Want to discover ideas that actually make money?
-            </Typography>
-            <Typography 
-              variant="body1" 
-              sx={{ 
-                mb: 4,
-                color: 'text.secondary'
-              }}
-            >
-              Join our newsletter and get weekly insights from successful Muslim entrepreneurs
-            </Typography>
-            <Grid container spacing={2} justifyContent="center">
-              <Grid item xs={12} sm={6} md={4}>
-                <TextField
-                  fullWidth
-                  placeholder="Enter your email"
-                  variant="outlined"
-                  sx={{ 
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: '8px',
-                      bgcolor: 'background.paper',
-                      '&:hover fieldset': {
-                        borderColor: 'primary.main',
-                      },
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={4} md={3}>
-                <Button 
-                  variant="contained" 
-                  fullWidth 
-                  size="large"
-                  sx={{ 
-                    height: '56px',
-                    borderRadius: '8px',
-                    textTransform: 'none',
-                    fontSize: '1rem'
-                  }}
-                >
-                  Subscribe
-                </Button>
-              </Grid>
-            </Grid>
-          </Box>
-        </Container>
-      </Box>
 
       {/* Footer */}
       <Box sx={{ bgcolor: 'black', color: 'white', py: 6 }}>

@@ -1,351 +1,320 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Container,
   Typography,
   Box,
   Grid,
-  Card,
-  CardContent,
-  CardHeader,
-  Avatar,
   Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   TextField,
+  MenuItem,
   IconButton,
-  Chip,
+  Badge,
   List,
   ListItem,
-  ListItemAvatar,
   ListItemText,
-  ListItemSecondaryAction,
-  Divider,
-  Tabs,
-  Tab,
-  useTheme,
-  Badge
+  ListItemIcon,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
 import {
-  ThumbUp as ThumbUpIcon,
-  Comment as CommentIcon,
-  Share as ShareIcon,
-  Bookmark as BookmarkIcon,
   Add as AddIcon,
   TrendingUp as TrendingUpIcon,
-  EmojiEvents as EmojiEventsIcon,
-  Group as GroupIcon,
-  Chat as ChatIcon,
   Notifications as NotificationsIcon,
-  Search as SearchIcon
 } from '@mui/icons-material';
+import { usePosts, useComments, useNotifications } from '../../hooks/useFirebase';
+import { Post as PostType } from '../../types/community';
+import { auth } from '../../firebase/config';
+import { onAuthStateChanged } from 'firebase/auth';
+import { useNavigate } from 'react-router-dom';
+import Auth from '../../components/Auth';
+import Post from '../../components/Post';
+import RichTextEditor from '../../components/RichTextEditor';
 
-interface Post {
-  id: number;
-  author: {
-    name: string;
-    avatar: string;
-    title: string;
-  };
-  content: string;
-  likes: number;
-  comments: number;
-  timestamp: string;
-  category: string;
-  tags: string[];
-}
-
-interface User {
-  id: number;
-  name: string;
-  avatar: string;
-  title: string;
-  business: string;
-  followers: number;
-  following: number;
-  posts: number;
-}
+type NewPost = Pick<PostType, 'title' | 'content' | 'category' | 'tags' | 'authorId'>;
 
 const CommunityHub = () => {
-  const theme = useTheme();
-  const [activeTab, setActiveTab] = useState(0);
-  const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [newPostDialogOpen, setNewPostDialogOpen] = useState(false);
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
+  const [currentUser, setCurrentUser] = useState(auth.currentUser);
+  const [newPost, setNewPost] = useState<NewPost>({
+    title: '',
+    content: '',
+    category: '',
+    tags: [],
+    authorId: auth.currentUser?.uid || '',
+  });
+  const [activePostId, setActivePostId] = useState<string | null>(null);
 
-  const posts: Post[] = [
-    {
-      id: 1,
-      author: {
-        name: "Sarah Johnson",
-        avatar: "https://source.unsplash.com/random/100x100/?portrait",
-        title: "Wedding Photographer"
-      },
-      content: "Just wrapped up an amazing wedding shoot! The couple was so happy with the results. Any tips for post-processing wedding photos?",
-      likes: 24,
-      comments: 8,
-      timestamp: "2 hours ago",
-      category: "Photography",
-      tags: ["wedding", "photography", "tips"]
-    },
-    {
-      id: 2,
-      author: {
-        name: "Mike Chen",
-        avatar: "https://source.unsplash.com/random/100x100/?chef",
-        title: "Food Truck Owner"
-      },
-      content: "Looking for recommendations on the best POS system for a food truck. Currently using Square but thinking about switching.",
-      likes: 18,
-      comments: 12,
-      timestamp: "4 hours ago",
-      category: "Food & Beverage",
-      tags: ["foodtruck", "pos", "business"]
-    },
-    {
-      id: 3,
-      author: {
-        name: "Emma Davis",
-        avatar: "https://source.unsplash.com/random/100x100/?event-planner",
-        title: "Event Planner"
-      },
-      content: "Just launched my new event planning website! Would love feedback from fellow event planners on the design and content.",
-      likes: 32,
-      comments: 15,
-      timestamp: "6 hours ago",
-      category: "Event Planning",
-      tags: ["website", "feedback", "launch"]
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      console.log("Auth state changed in CommunityHub:", user?.uid);
+      setCurrentUser(user);
+      setIsAuthChecking(false);
+
+      if (!user) {
+        navigate('/');
+      }
+    });
+
+    return () => unsubscribe();
+  }, [navigate]);
+
+  const { posts, loading: postsLoading, error: postsError, createPost } = usePosts(selectedCategory || undefined);
+  const { notifications, loading: notificationsLoading } = useNotifications();
+  const { addComment } = useComments(activePostId || '');
+
+  const unreadNotifications = notifications.filter(n => !n.read).length;
+
+  if (isAuthChecking) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (!currentUser) {
+    return (
+      <Box sx={{ p: 4, textAlign: 'center' }}>
+        <Typography variant="h5" gutterBottom>
+          Sign in to join the community
+        </Typography>
+        <Auth />
+      </Box>
+    );
+  }
+
+  const handleCreatePost = async () => {
+    if (!currentUser) {
+      console.error('No user found');
+      return;
     }
-  ];
 
-  const suggestedUsers: User[] = [
-    {
-      id: 1,
-      name: "Alex Thompson",
-      avatar: "https://source.unsplash.com/random/100x100/?artist",
-      title: "Creative Director",
-      business: "Design Studio",
-      followers: 234,
-      following: 156,
-      posts: 89
-    },
-    {
-      id: 2,
-      name: "Lisa Wong",
-      avatar: "https://source.unsplash.com/random/100x100/?entrepreneur",
-      title: "Beauty Entrepreneur",
-      business: "Spa & Wellness",
-      followers: 567,
-      following: 234,
-      posts: 156
-    },
-    {
-      id: 3,
-      name: "David Rodriguez",
-      avatar: "https://source.unsplash.com/random/100x100/?chef",
-      title: "Catering Expert",
-      business: "Culinary Services",
-      followers: 789,
-      following: 345,
-      posts: 234
+    try {
+      await createPost({
+        ...newPost,
+        authorId: currentUser.uid,
+        isHtml: true,
+      });
+      setNewPostDialogOpen(false);
+      setNewPost({
+        title: '',
+        content: '',
+        category: '',
+        tags: [],
+        authorId: currentUser.uid,
+      });
+    } catch (err) {
+      console.error('Error creating post:', err);
     }
-  ];
+  };
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setActiveTab(newValue);
+  const handleAddComment = async (postId: string, content: string) => {
+    if (!currentUser) {
+      console.error('No user found');
+      return;
+    }
+
+    try {
+      setActivePostId(postId);
+      await addComment(content);
+    } catch (err) {
+      console.error('Error adding comment:', err);
+    }
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" gutterBottom>
+    <Box sx={{ backgroundColor: 'background.default', minHeight: '100vh', pt: 3 }}>
+      <Container maxWidth="lg">
+        <Typography variant="h4" gutterBottom sx={{ mb: 4 }}>
           Community Hub
         </Typography>
-        <Typography variant="subtitle1" color="text.secondary">
-          Connect, share, and grow with fellow entrepreneurs
-        </Typography>
-      </Box>
-
-      <Grid container spacing={3}>
-        {/* Main Content */}
-        <Grid item xs={12} md={8}>
-          <Card sx={{ mb: 3 }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-                <Avatar src="https://source.unsplash.com/random/100x100/?user" />
-                <TextField
-                  fullWidth
-                  placeholder="Share your thoughts, ask questions, or start a discussion..."
-                  variant="outlined"
-                  size="small"
-                />
-                <Button variant="contained" startIcon={<AddIcon />}>
-                  Post
-                </Button>
-              </Box>
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                <Chip icon={<ThumbUpIcon />} label="Share Experience" />
-                <Chip icon={<CommentIcon />} label="Ask Question" />
-                <Chip icon={<ShareIcon />} label="Share Resource" />
-              </Box>
-            </CardContent>
-          </Card>
-
-          <Tabs
-            value={activeTab}
-            onChange={handleTabChange}
-            sx={{ mb: 3 }}
-          >
-            <Tab label="For You" />
-            <Tab label="Following" />
-            <Tab label="Trending" />
-            <Tab label="Latest" />
-          </Tabs>
-
-          {posts.map((post) => (
-            <Card key={post.id} sx={{ mb: 2 }}>
-              <CardHeader
-                avatar={
-                  <Avatar src={post.author.avatar} />
-                }
-                title={post.author.name}
-                subheader={
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography variant="body2" color="text.secondary">
-                      {post.author.title}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      • {post.timestamp}
-                    </Typography>
-                  </Box>
-                }
-              />
-              <CardContent>
-                <Typography variant="body1" paragraph>
-                  {post.content}
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                  {post.tags.map((tag) => (
-                    <Chip key={tag} label={tag} size="small" />
-                  ))}
-                </Box>
-                <Box sx={{ display: 'flex', gap: 2 }}>
-                  <IconButton size="small">
-                    <ThumbUpIcon />
-                    <Typography variant="body2" sx={{ ml: 0.5 }}>
-                      {post.likes}
-                    </Typography>
-                  </IconButton>
-                  <IconButton size="small">
-                    <CommentIcon />
-                    <Typography variant="body2" sx={{ ml: 0.5 }}>
-                      {post.comments}
-                    </Typography>
-                  </IconButton>
-                  <IconButton size="small">
-                    <ShareIcon />
-                  </IconButton>
-                  <IconButton size="small">
-                    <BookmarkIcon />
-                  </IconButton>
-                </Box>
-              </CardContent>
-            </Card>
-          ))}
-        </Grid>
-
-        {/* Sidebar */}
-        <Grid item xs={12} md={4}>
-          {/* Search */}
-          <Card sx={{ mb: 3 }}>
-            <CardContent>
-              <TextField
-                fullWidth
-                placeholder="Search community..."
-                variant="outlined"
-                size="small"
-                InputProps={{
-                  startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                }}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </CardContent>
-          </Card>
-
-          {/* Suggested Connections */}
-          <Card sx={{ mb: 3 }}>
-            <CardHeader
-              title="Suggested Connections"
-              avatar={<GroupIcon />}
-            />
-            <CardContent>
+        <Grid container spacing={3}>
+          {/* Left Sidebar */}
+          <Grid item xs={12} md={3}>
+            <Box sx={{ bgcolor: 'background.paper', p: 2, borderRadius: 1 }}>
+              <Typography variant="h6" gutterBottom>
+                Categories
+              </Typography>
               <List>
-                {suggestedUsers.map((user) => (
-                  <React.Fragment key={user.id}>
-                    <ListItem>
-                      <ListItemAvatar>
-                        <Avatar src={user.avatar} />
-                      </ListItemAvatar>
-                      <ListItemText
-                        primary={user.name}
-                        secondary={
-                          <Box>
-                            <Typography variant="body2" color="text.secondary">
-                              {user.title}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {user.business}
-                            </Typography>
-                          </Box>
-                        }
-                      />
-                      <ListItemSecondaryAction>
-                        <Button variant="outlined" size="small">
-                          Follow
-                        </Button>
-                      </ListItemSecondaryAction>
-                    </ListItem>
-                    {user.id !== suggestedUsers.length && <Divider variant="inset" component="li" />}
-                  </React.Fragment>
+                <ListItem
+                  button
+                  selected={!selectedCategory}
+                  onClick={() => setSelectedCategory(null)}
+                >
+                  <ListItemText primary="All" />
+                </ListItem>
+                {['Questions', 'Success Stories', 'Tips', 'Resources'].map((category) => (
+                  <ListItem
+                    key={category}
+                    button
+                    selected={selectedCategory === category}
+                    onClick={() => setSelectedCategory(category)}
+                  >
+                    <ListItemText primary={category} />
+                  </ListItem>
                 ))}
               </List>
-            </CardContent>
-          </Card>
+            </Box>
+          </Grid>
 
-          {/* Community Stats */}
-          <Card>
-            <CardHeader
-              title="Your Community Stats"
-              avatar={<EmojiEventsIcon />}
-            />
-            <CardContent>
+          {/* Main Content */}
+          <Grid item xs={12} md={6}>
+            <Box sx={{ mb: 3 }}>
+              <TextField
+                fullWidth
+                variant="outlined"
+                placeholder="Share your thoughts..."
+                onClick={() => setNewPostDialogOpen(true)}
+                InputProps={{
+                  endAdornment: (
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      startIcon={<AddIcon />}
+                      onClick={() => setNewPostDialogOpen(true)}
+                    >
+                      Post
+                    </Button>
+                  ),
+                }}
+              />
+            </Box>
+
+            {postsLoading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                <CircularProgress />
+              </Box>
+            ) : postsError ? (
+              <Alert severity="error" sx={{ mb: 2 }}>{postsError}</Alert>
+            ) : posts.length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Typography color="text.secondary">
+                  No posts yet. Be the first to post!
+                </Typography>
+              </Box>
+            ) : (
+              posts.map((post) => (
+                <Post
+                  key={post.id}
+                  post={post}
+                  onComment={(content) => handleAddComment(post.id, content)}
+                />
+              ))
+            )}
+          </Grid>
+
+          {/* Right Sidebar */}
+          <Grid item xs={12} md={3}>
+            <Box sx={{ bgcolor: 'background.paper', p: 2, borderRadius: 1, mb: 3 }}>
+              <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <TrendingUpIcon />
+                Trending Topics
+              </Typography>
               <List>
-                <ListItem>
-                  <ListItemText
-                    primary="Followers"
-                    secondary="234"
-                  />
-                </ListItem>
-                <ListItem>
-                  <ListItemText
-                    primary="Following"
-                    secondary="156"
-                  />
-                </ListItem>
-                <ListItem>
-                  <ListItemText
-                    primary="Posts"
-                    secondary="89"
-                  />
-                </ListItem>
-                <ListItem>
-                  <ListItemText
-                    primary="Engagement Rate"
-                    secondary="4.2%"
-                  />
-                </ListItem>
+                {['Marketing', 'Growth', 'Finance', 'Operations'].map((topic) => (
+                  <ListItem key={topic} button>
+                    <ListItemIcon>
+                      <TrendingUpIcon color="action" />
+                    </ListItemIcon>
+                    <ListItemText primary={topic} />
+                  </ListItem>
+                ))}
               </List>
-            </CardContent>
-          </Card>
+            </Box>
+
+            <Box sx={{ bgcolor: 'background.paper', p: 2, borderRadius: 1 }}>
+              <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Badge badgeContent={unreadNotifications} color="primary">
+                  <NotificationsIcon />
+                </Badge>
+                Notifications
+              </Typography>
+              {notificationsLoading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+                  <CircularProgress size={24} />
+                </Box>
+              ) : (
+                <List>
+                  {notifications.slice(0, 5).map((notification) => (
+                    <ListItem key={notification.id}>
+                      <ListItemText
+                        primary={`New ${notification.type}`}
+                        secondary={notification.createdAt.toLocaleDateString()}
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              )}
+            </Box>
+          </Grid>
         </Grid>
-      </Grid>
-    </Container>
+
+        {/* New Post Dialog */}
+        <Dialog
+          open={newPostDialogOpen}
+          onClose={() => setNewPostDialogOpen(false)}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle>Create New Post</DialogTitle>
+          <DialogContent>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+              <TextField
+                label="Title"
+                fullWidth
+                value={newPost.title}
+                onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
+              />
+              <RichTextEditor
+                content={newPost.content}
+                onChange={(content) => setNewPost({ ...newPost, content })}
+              />
+              <TextField
+                select
+                label="Category"
+                fullWidth
+                value={newPost.category}
+                onChange={(e) => setNewPost({ ...newPost, category: e.target.value })}
+              >
+                {['Questions', 'Success Stories', 'Tips', 'Resources'].map((category) => (
+                  <MenuItem key={category} value={category}>
+                    {category}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <TextField
+                label="Tags (comma-separated)"
+                fullWidth
+                value={newPost.tags.join(', ')}
+                onChange={(e) => setNewPost({
+                  ...newPost,
+                  tags: e.target.value.split(',').map(tag => tag.trim()).filter(Boolean)
+                })}
+                helperText="Enter tags separated by commas (e.g., marketing, tips, help)"
+              />
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setNewPostDialogOpen(false)}>Cancel</Button>
+            <Button
+              onClick={handleCreatePost}
+              variant="contained"
+              color="primary"
+              disabled={!newPost.title || !newPost.content || !newPost.category}
+            >
+              Post
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Container>
+    </Box>
   );
 };
 

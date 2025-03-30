@@ -82,6 +82,130 @@ const storiesByCategory: { [key: string]: Story[] } = {
       readTime: "6 min read",
       tags: ["Henna", "Cultural Services", "Beauty"]
     }
+  ],
+  'creative-services': [
+    {
+      id: 7,
+      title: "How I Built a $12K/Month Balloon Garland Setup Business",
+      category: "Creative Services",
+      image: "https://source.unsplash.com/random/800x600/?balloon-decor",
+      excerpt: "A creative entrepreneur turned their passion for balloon art into a thriving business...",
+      revenue: "$12,000",
+      readTime: "8 min read",
+      tags: ["Event Decor", "Creative Services", "Party Planning"]
+    },
+    {
+      id: 8,
+      title: "How I Built an $8K/Month Luxury Picnic Setup Business",
+      category: "Creative Services",
+      image: "https://source.unsplash.com/random/800x600/?picnic-setup",
+      excerpt: "An entrepreneur turned their passion for creating beautiful outdoor experiences into a thriving luxury picnic setup business...",
+      revenue: "$8,000",
+      readTime: "10 min read",
+      tags: ["Event Services", "Creative Services", "Outdoor Events"]
+    }
+  ],
+  'event-planning': [
+    {
+      id: 9,
+      title: "How I Built a $15K/Month Mobile Car Wash Business",
+      category: "Event Planning",
+      image: "https://source.unsplash.com/random/800x600/?car-wash",
+      excerpt: "An entrepreneur turned their passion for car care into a thriving mobile business...",
+      revenue: "$15,000",
+      readTime: "9 min read",
+      tags: ["Auto Services", "Mobile Business", "Event Services"]
+    }
+  ],
+  'food-and-beverage': [
+    {
+      id: 10,
+      title: "The Halal Guys: From Food Cart to Global Franchise",
+      category: "Food & Beverage",
+      image: "https://source.unsplash.com/random/800x600/?halal-food",
+      excerpt: "How three friends turned a simple food cart into a global franchise...",
+      revenue: "$50,000+",
+      readTime: "12 min read",
+      tags: ["Food Service", "Franchise", "Entrepreneurship"]
+    },
+    {
+      id: 15,
+      title: "Qahwah House: Modern Coffee Experience with Traditional Roots",
+      category: "Food & Beverage",
+      image: "https://source.unsplash.com/random/800x600/?coffee-shop",
+      excerpt: "A modern coffee shop that blends traditional Middle Eastern coffee culture with contemporary cafe experiences...",
+      revenue: "$15,000+",
+      readTime: "9 min read",
+      tags: ["Coffee Shop", "Cafe", "Food & Beverage"]
+    },
+    {
+      id: 16,
+      title: "Qamaria: Middle Eastern Coffee Culture Reimagined",
+      category: "Food & Beverage",
+      image: "https://source.unsplash.com/random/800x600/?arabic-coffee",
+      excerpt: "How a traditional coffee concept was modernized to appeal to contemporary audiences...",
+      revenue: "$40,000+",
+      readTime: "10 min read",
+      tags: ["Coffee Shop", "Middle Eastern", "Food & Beverage"]
+    },
+    {
+      id: 17,
+      title: "Wedding Catering: From Home Kitchen to Full-Service Business",
+      category: "Food & Beverage",
+      image: "https://source.unsplash.com/random/800x600/?wedding-catering",
+      excerpt: "A journey from cooking for friends' weddings to running a successful catering company...",
+      revenue: "$100,000",
+      readTime: "12 min read",
+      tags: ["Catering", "Food Service", "Event Planning"]
+    }
+  ],
+  'beauty-and-wellness': [
+    {
+      id: 11,
+      title: "How I Built a $20K/Month Mobile Pet Grooming Business",
+      category: "Beauty & Wellness",
+      image: "https://source.unsplash.com/random/800x600/?pet-grooming",
+      excerpt: "A mobile pet grooming service that brings luxury care directly to customers' homes...",
+      revenue: "$20,000",
+      readTime: "10 min read",
+      tags: ["Pet Services", "Mobile Business", "Beauty & Wellness"]
+    }
+  ],
+  'photography': [
+    {
+      id: 12,
+      title: "How I Built a $50K Wedding Photography Business",
+      category: "Photography",
+      image: "https://source.unsplash.com/random/800x600/?wedding-photography",
+      excerpt: "From starting with a basic DSLR to becoming one of the most sought-after wedding photographers...",
+      revenue: "$50,000",
+      readTime: "8 min read",
+      tags: ["Photography", "Wedding Services", "Entrepreneurship"]
+    }
+  ],
+  'art-and-design': [
+    {
+      id: 13,
+      title: "The Art of Wedding Decor: A $75K Success Story",
+      category: "Art & Design",
+      image: "https://source.unsplash.com/random/800x600/?wedding-decoration",
+      excerpt: "How I turned my passion for floral arrangements into a thriving wedding decor business...",
+      revenue: "$75,000",
+      readTime: "10 min read",
+      tags: ["Wedding Decor", "Floral Design", "Event Planning"]
+    }
+  ],
+  'seasonal-services': [
+    {
+      id: 14,
+      title: "How I Built a $15K/Month Mobile Car Wash Business",
+      category: "Seasonal Services",
+      image: "https://source.unsplash.com/random/800x600/?car-wash",
+      excerpt: "An entrepreneur turned their passion for car care into a thriving mobile business...",
+      revenue: "$15,000",
+      readTime: "9 min read",
+      tags: ["Auto Services", "Mobile Business", "Event Services"]
+    }
   ]
 };
 
