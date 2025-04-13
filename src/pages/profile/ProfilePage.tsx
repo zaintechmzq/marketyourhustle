@@ -18,6 +18,9 @@ import {
   DialogContent,
   DialogActions,
   Link,
+  Badge,
+  Tooltip,
+  TextField,
 } from '@mui/material';
 import {
   Edit as EditIcon,
@@ -25,6 +28,11 @@ import {
   Twitter as TwitterIcon,
   Instagram as InstagramIcon,
   Language as WebsiteIcon,
+  Message as MessageIcon,
+  Business as BusinessIcon,
+  Star as StarIcon,
+  EmojiEvents as BadgeIcon,
+  Timeline as TimelineIcon,
 } from '@mui/icons-material';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from '../../firebase/config';
@@ -48,6 +56,28 @@ interface UserProfile {
     instagram?: string;
   };
   website?: string;
+  expertise: string[];
+  location: string;
+  businessDetails: {
+    founded: string;
+    size: string;
+    industry: string;
+    specialties: string[];
+  };
+  achievements: {
+    title: string;
+    description: string;
+    date: string;
+  }[];
+  testimonials: {
+    userId: string;
+    text: string;
+    rating: number;
+    date: string;
+  }[];
+  connections: string[];
+  posts: string[];
+  events: string[];
 }
 
 interface TabPanelProps {
@@ -80,6 +110,10 @@ const ProfilePage = () => {
   const [isAuthChecking, setIsAuthChecking] = useState(true);
   const [currentUser, setCurrentUser] = useState(auth.currentUser);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [showMessageDialog, setShowMessageDialog] = useState(false);
+  const [messageText, setMessageText] = useState('');
+  const [achievements, setAchievements] = useState<any[]>([]);
+  const [testimonials, setTestimonials] = useState<any[]>([]);
 
   // Handle auth state
   useEffect(() => {
@@ -110,7 +144,20 @@ const ProfilePage = () => {
     businessType: '',
     reputation: 0,
     badges: [],
-    social: {}
+    social: {},
+    expertise: [],
+    location: '',
+    businessDetails: {
+      founded: '',
+      size: '',
+      industry: '',
+      specialties: [],
+    },
+    achievements: [],
+    testimonials: [],
+    connections: [],
+    posts: [],
+    events: [],
   });
 
   const fetchProfile = async () => {
@@ -142,11 +189,26 @@ const ProfilePage = () => {
           badges: userData.badges || [],
           social: userData.social || {},
           website: userData.website || '',
+          expertise: userData.expertise || [],
+          location: userData.location || '',
+          businessDetails: userData.businessDetails || {
+            founded: '',
+            size: '',
+            industry: '',
+            specialties: [],
+          },
+          achievements: userData.achievements || [],
+          testimonials: userData.testimonials || [],
+          connections: userData.connections || [],
+          posts: userData.posts || [],
+          events: userData.events || [],
           createdAt: userData.createdAt || new Date(),
           updatedAt: userData.updatedAt || new Date()
         };
         
         setProfile(profileData);
+        setAchievements(profileData.achievements);
+        setTestimonials(profileData.testimonials);
       } else {
         console.log("No existing profile, creating new one");
         if (targetUserId === currentUser.uid) {
@@ -164,6 +226,8 @@ const ProfilePage = () => {
             createdAt: new Date(),
             updatedAt: new Date()
           } as UserProfile);
+          setAchievements(newUserProfile.achievements);
+          setTestimonials(newUserProfile.testimonials);
         } else {
           setError('User profile not found');
         }
@@ -221,6 +285,26 @@ const ProfilePage = () => {
     fetchProfile();
   };
 
+  const handleSendMessage = async () => {
+    if (!currentUser || !profile || !messageText.trim()) return;
+    
+    try {
+      const messageRef = doc(db, 'messages', `${currentUser.uid}_${profile.uid}`);
+      await setDoc(messageRef, {
+        senderId: currentUser.uid,
+        receiverId: profile.uid,
+        text: messageText,
+        timestamp: serverTimestamp(),
+        read: false
+      });
+      
+      setMessageText('');
+      setShowMessageDialog(false);
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
+  };
+
   if (loading || isAuthChecking) {
     return (
       <Container>
@@ -276,255 +360,259 @@ const ProfilePage = () => {
 
   const isOwnProfile = currentUser?.uid === userId;
 
-  return (
-    <Container maxWidth="lg">
-      <Box sx={{ py: 4 }}>
-        <Paper elevation={2} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={3}>
-              <Box sx={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                alignItems: 'center',
-                position: 'relative'
-              }}>
-                <Avatar
-                  src={profile?.photoURL}
-                  sx={{ 
-                    width: 150, 
-                    height: 150, 
-                    mb: 2,
-                    boxShadow: 2
-                  }}
-                />
-                {isOwnProfile && (
-                  <Button
-                    variant="outlined"
-                    startIcon={<EditIcon />}
-                    onClick={handleEditProfile}
-                    sx={{ 
-                      mb: 2,
-                      borderRadius: 2,
-                      textTransform: 'none',
-                      fontWeight: 500
-                    }}
-                  >
-                    Edit Profile
-                  </Button>
-                )}
-              </Box>
-            </Grid>
-            <Grid item xs={12} md={9}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h4" component="h1" sx={{ fontWeight: 500 }}>
-                  {profile?.displayName}
-                </Typography>
-              </Box>
-              <Typography 
-                variant="body1" 
-                color="text.secondary" 
-                paragraph
+  const renderProfileHeader = () => (
+    <Box sx={{ mb: 4 }}>
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={4} sx={{ textAlign: 'center' }}>
+          <Box sx={{ position: 'relative', display: 'inline-block' }}>
+            <Avatar
+              src={profile?.photoURL}
+              sx={{ width: 150, height: 150, mb: 2 }}
+            />
+            {currentUser?.uid === profile?.uid && (
+              <IconButton
+                onClick={() => setEditDialogOpen(true)}
                 sx={{
-                  whiteSpace: 'pre-wrap',
-                  mb: 3
+                  position: 'absolute',
+                  bottom: 0,
+                  right: 0,
+                  backgroundColor: 'background.paper',
+                  '&:hover': { backgroundColor: 'action.hover' }
                 }}
               >
-                {profile?.bio || 'No bio provided'}
+                <EditIcon />
+              </IconButton>
+            )}
+          </Box>
+          {currentUser?.uid !== profile?.uid && (
+            <Button
+              variant="contained"
+              startIcon={<MessageIcon />}
+              onClick={() => setShowMessageDialog(true)}
+              sx={{ mt: 2 }}
+            >
+              Send Message
+            </Button>
+          )}
+        </Grid>
+        <Grid item xs={12} md={8}>
+          <Typography variant="h4" gutterBottom>
+            {profile?.displayName}
+          </Typography>
+          <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+            {profile?.businessType}
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+            {profile?.expertise?.map((skill, index) => (
+              <Chip key={index} label={skill} size="small" />
+            ))}
+          </Box>
+          <Typography variant="body1" paragraph>
+            {profile?.bio}
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            {profile?.social?.linkedin && (
+              <IconButton href={profile.social.linkedin} target="_blank">
+                <LinkedInIcon />
+              </IconButton>
+            )}
+            {profile?.social?.twitter && (
+              <IconButton href={profile.social.twitter} target="_blank">
+                <TwitterIcon />
+              </IconButton>
+            )}
+            {profile?.social?.instagram && (
+              <IconButton href={profile.social.instagram} target="_blank">
+                <InstagramIcon />
+              </IconButton>
+            )}
+            {profile?.website && (
+              <IconButton href={profile.website} target="_blank">
+                <WebsiteIcon />
+              </IconButton>
+            )}
+          </Box>
+        </Grid>
+      </Grid>
+    </Box>
+  );
+
+  const renderBusinessDetails = () => (
+    <Paper sx={{ p: 3, mb: 3 }}>
+      <Typography variant="h6" gutterBottom>
+        <BusinessIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+        Business Details
+      </Typography>
+      <Grid container spacing={2}>
+        <Grid item xs={12} sm={6}>
+          <Typography variant="subtitle2" color="text.secondary">
+            Founded
+          </Typography>
+          <Typography variant="body1">
+            {profile?.businessDetails?.founded || 'Not specified'}
+          </Typography>
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <Typography variant="subtitle2" color="text.secondary">
+            Company Size
+          </Typography>
+          <Typography variant="body1">
+            {profile?.businessDetails?.size || 'Not specified'}
+          </Typography>
+        </Grid>
+        <Grid item xs={12}>
+          <Typography variant="subtitle2" color="text.secondary">
+            Specialties
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            {profile?.businessDetails?.specialties?.map((specialty, index) => (
+              <Chip key={index} label={specialty} size="small" />
+            ))}
+          </Box>
+        </Grid>
+      </Grid>
+    </Paper>
+  );
+
+  const renderAchievements = () => (
+    <Paper sx={{ p: 3, mb: 3 }}>
+      <Typography variant="h6" gutterBottom>
+        <BadgeIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+        Achievements
+      </Typography>
+      <Grid container spacing={2}>
+        {profile?.achievements?.map((achievement, index) => (
+          <Grid item xs={12} key={index}>
+            <Paper variant="outlined" sx={{ p: 2 }}>
+              <Typography variant="subtitle1">{achievement.title}</Typography>
+              <Typography variant="body2" color="text.secondary">
+                {achievement.description}
               </Typography>
-              <Box sx={{ mb: 3 }}>
-                {profile?.businessType && (
-                  <Chip
-                    label={profile.businessType}
-                    sx={{ 
-                      mr: 1, 
-                      mb: 1,
-                      backgroundColor: '#FF7F50',
-                      color: 'white',
-                      fontWeight: 500
+              <Typography variant="caption" color="text.secondary">
+                {new Date(achievement.date).toLocaleDateString()}
+              </Typography>
+            </Paper>
+          </Grid>
+        ))}
+      </Grid>
+    </Paper>
+  );
+
+  const renderTestimonials = () => (
+    <Paper sx={{ p: 3 }}>
+      <Typography variant="h6" gutterBottom>
+        <StarIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+        Testimonials
+      </Typography>
+      <Grid container spacing={2}>
+        {profile?.testimonials?.map((testimonial, index) => (
+          <Grid item xs={12} key={index}>
+            <Paper variant="outlined" sx={{ p: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <Avatar sx={{ mr: 1 }} />
+                <Box>
+                  <Typography variant="subtitle2">
+                    {testimonial.userId}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {new Date(testimonial.date).toLocaleDateString()}
+                  </Typography>
+                </Box>
+              </Box>
+              <Typography variant="body2">{testimonial.text}</Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                {[...Array(5)].map((_, i) => (
+                  <StarIcon
+                    key={i}
+                    sx={{
+                      color: i < testimonial.rating ? 'primary.main' : 'action.disabled',
+                      fontSize: 16
                     }}
-                  />
-                )}
-                {profile?.reputation && (
-                  <Chip
-                    label={`${profile.reputation} reputation`}
-                    color="primary"
-                    sx={{ mr: 1, mb: 1 }}
-                  />
-                )}
-                {profile?.badges?.map((badge) => (
-                  <Chip
-                    key={badge}
-                    label={badge}
-                    variant="outlined"
-                    sx={{ mr: 1, mb: 1 }}
                   />
                 ))}
               </Box>
-              <Box sx={{ display: 'flex', gap: 2 }}>
-                {profile?.website && (
-                  <IconButton
-                    href={profile.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    sx={{
-                      backgroundColor: 'action.hover',
-                      '&:hover': {
-                        backgroundColor: 'action.selected',
-                      },
-                    }}
-                  >
-                    <WebsiteIcon />
-                  </IconButton>
-                )}
-                {profile?.social?.linkedin && (
-                  <IconButton
-                    href={profile.social.linkedin}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    sx={{
-                      backgroundColor: 'action.hover',
-                      '&:hover': {
-                        backgroundColor: 'action.selected',
-                      },
-                    }}
-                  >
-                    <LinkedInIcon />
-                  </IconButton>
-                )}
-                {profile?.social?.twitter && (
-                  <IconButton
-                    href={profile.social.twitter}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    sx={{
-                      backgroundColor: 'action.hover',
-                      '&:hover': {
-                        backgroundColor: 'action.selected',
-                      },
-                    }}
-                  >
-                    <TwitterIcon />
-                  </IconButton>
-                )}
-                {profile?.social?.instagram && (
-                  <IconButton
-                    href={profile.social.instagram}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    sx={{
-                      backgroundColor: 'action.hover',
-                      '&:hover': {
-                        backgroundColor: 'action.selected',
-                      },
-                    }}
-                  >
-                    <InstagramIcon />
-                  </IconButton>
-                )}
-              </Box>
-            </Grid>
+            </Paper>
           </Grid>
-        </Paper>
+        ))}
+      </Grid>
+    </Paper>
+  );
 
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-          <Tabs 
-            value={tabValue} 
-            onChange={handleTabChange}
-            sx={{
-              '& .MuiTab-root': {
-                textTransform: 'none',
-                fontWeight: 500,
-                minWidth: 100,
-              },
-            }}
-          >
-            <Tab label="Posts" />
-            <Tab label="Activity" />
-            <Tab label="About" />
-          </Tabs>
+  return (
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+          <CircularProgress />
         </Box>
+      ) : error ? (
+        <Typography color="error">{error}</Typography>
+      ) : profile ? (
+        <>
+          {renderProfileHeader()}
+          <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+            <Tabs value={tabValue} onChange={handleTabChange}>
+              <Tab label="Overview" />
+              <Tab label="Business" />
+              <Tab label="Achievements" />
+              <Tab label="Testimonials" />
+              <Tab label="Timeline" />
+            </Tabs>
+          </Box>
+          <TabPanel value={tabValue} index={0}>
+            {renderBusinessDetails()}
+            {renderAchievements()}
+            {renderTestimonials()}
+          </TabPanel>
+          <TabPanel value={tabValue} index={1}>
+            {/* Business tab content */}
+          </TabPanel>
+          <TabPanel value={tabValue} index={2}>
+            {/* Achievements tab content */}
+          </TabPanel>
+          <TabPanel value={tabValue} index={3}>
+            {/* Testimonials tab content */}
+          </TabPanel>
+          <TabPanel value={tabValue} index={4}>
+            {/* Timeline tab content */}
+          </TabPanel>
+        </>
+      ) : null}
 
-        <TabPanel value={tabValue} index={0}>
-          <Typography variant="h6" sx={{ mb: 2 }}>Posts</Typography>
-          {/* Add posts content */}
-        </TabPanel>
+      {/* Message Dialog */}
+      <Dialog
+        open={showMessageDialog}
+        onClose={() => setShowMessageDialog(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Send Message to {profile?.displayName}</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Message"
+            fullWidth
+            multiline
+            rows={4}
+            value={messageText}
+            onChange={(e) => setMessageText(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowMessageDialog(false)}>Cancel</Button>
+          <Button onClick={handleSendMessage} variant="contained">
+            Send
+          </Button>
+        </DialogActions>
+      </Dialog>
 
-        <TabPanel value={tabValue} index={1}>
-          <Typography variant="h6" sx={{ mb: 2 }}>Activity</Typography>
-          {/* Add activity content */}
-        </TabPanel>
-
-        <TabPanel value={tabValue} index={2}>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <Paper sx={{ p: 3, borderRadius: 2 }}>
-                <Typography variant="h6" gutterBottom>Business Details</Typography>
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Business Type
-                  </Typography>
-                  <Typography>
-                    {profile?.businessType || 'Not specified'}
-                  </Typography>
-                </Box>
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Website
-                  </Typography>
-                  <Typography>
-                    {profile?.website ? (
-                      <Link 
-                        href={profile.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        sx={{ 
-                          color: 'primary.main',
-                          textDecoration: 'none',
-                          '&:hover': {
-                            textDecoration: 'underline'
-                          }
-                        }}
-                      >
-                        {profile.website}
-                      </Link>
-                    ) : 'Not specified'}
-                  </Typography>
-                </Box>
-              </Paper>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <Paper sx={{ p: 3, borderRadius: 2 }}>
-                <Typography variant="h6" gutterBottom>Account Info</Typography>
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Member since
-                  </Typography>
-                  <Typography>
-                    {formatDate(profile?.createdAt)}
-                  </Typography>
-                </Box>
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Last updated
-                  </Typography>
-                  <Typography>
-                    {formatDate(profile?.updatedAt)}
-                  </Typography>
-                </Box>
-              </Paper>
-            </Grid>
-          </Grid>
-        </TabPanel>
-      </Box>
-
-      {profile && (
-        <EditProfileDialog
-          open={editDialogOpen}
-          onClose={() => setEditDialogOpen(false)}
-          profile={profile}
-          onUpdate={handleProfileUpdate}
-        />
-      )}
+      {/* Edit Profile Dialog */}
+      <EditProfileDialog
+        open={editDialogOpen}
+        onClose={() => setEditDialogOpen(false)}
+        profile={profile}
+        onUpdate={fetchProfile}
+      />
     </Container>
   );
 };
