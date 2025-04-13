@@ -1,11 +1,35 @@
-import { initializeApp } from 'firebase/app';
-import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
-import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { initializeApp, getApps } from 'firebase/app';
+import { 
+  getFirestore, 
+  initializeFirestore,
+  persistentLocalCache,
+  persistentSingleTabManager
+} from 'firebase/firestore';
+import { 
+  getAuth, 
+  setPersistence, 
+  browserLocalPersistence,
+  onAuthStateChanged 
+} from 'firebase/auth';
 import { getStorage } from 'firebase/storage';
 import { getAnalytics } from 'firebase/analytics';
 
+// Log all environment variables (safely)
+console.log('Environment Variables Status:', {
+  FIREBASE_API_KEY: process.env.REACT_APP_FIREBASE_API_KEY ? 'Present' : 'Missing',
+  FIREBASE_AUTH_DOMAIN: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN ? 'Present' : 'Missing',
+  FIREBASE_PROJECT_ID: process.env.REACT_APP_FIREBASE_PROJECT_ID ? 'Present' : 'Missing',
+  FIREBASE_STORAGE_BUCKET: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET ? 'Present' : 'Missing',
+  FIREBASE_MESSAGING_SENDER_ID: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID ? 'Present' : 'Missing',
+  FIREBASE_APP_ID: process.env.REACT_APP_FIREBASE_APP_ID ? 'Present' : 'Missing',
+  FIREBASE_MEASUREMENT_ID: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID ? 'Present' : 'Missing'
+});
+
+if (!process.env.REACT_APP_FIREBASE_API_KEY) {
+  console.error('Firebase API Key is missing! Please check your environment variables.');
+}
+
 const firebaseConfig = {
-  // Replace with your Firebase config
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
   authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
   projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
@@ -15,22 +39,47 @@ const firebaseConfig = {
   measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-
-// Initialize services
-export const db = getFirestore(app);
-export const auth = getAuth(app);
-export const storage = getStorage(app);
-export const analytics = getAnalytics(app);
-
-// Enable persistence
-setPersistence(auth, browserLocalPersistence).catch((error) => {
-  console.error("Error enabling auth persistence:", error);
+console.log('Initializing Firebase with config:', {
+  ...firebaseConfig,
+  apiKey: firebaseConfig.apiKey ? '(API Key is set)' : '(API Key is missing)',
 });
 
-enableIndexedDbPersistence(db).catch((error) => {
-  console.error("Error enabling Firestore persistence:", error);
+// Initialize Firebase only if it hasn't been initialized already
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+
+// Initialize Firestore with persistent cache
+const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({
+    tabManager: persistentSingleTabManager()
+  })
 });
 
-export default app; 
+// Initialize other services
+const auth = getAuth(app);
+const storage = getStorage(app);
+let analytics;
+
+// Set up auth persistence immediately
+setPersistence(auth, browserLocalPersistence)
+  .then(() => {
+    console.log('Auth persistence enabled successfully');
+    
+    // Set up auth state listener for debugging
+    onAuthStateChanged(auth, (user) => {
+      console.log('Auth state changed:', user ? 'User is signed in' : 'User is signed out');
+    });
+  })
+  .catch((error) => {
+    console.error('Error setting auth persistence:', error);
+  });
+
+// Initialize Analytics if measurement ID exists
+if (process.env.REACT_APP_FIREBASE_MEASUREMENT_ID) {
+  try {
+    analytics = getAnalytics(app);
+  } catch (error) {
+    console.warn('Analytics initialization failed:', error);
+  }
+}
+
+export { app, db, auth, storage, analytics }; 

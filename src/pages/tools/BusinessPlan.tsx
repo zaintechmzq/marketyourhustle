@@ -5,18 +5,13 @@ import {
   Box,
   TextField,
   Button,
-  Grid,
   Paper,
   Stepper,
   Step,
   StepLabel,
-  Divider,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Alert
+  Alert,
 } from '@mui/material';
+import { Description as DescriptionIcon } from '@mui/icons-material';
 
 const steps = [
   'Executive Summary',
@@ -29,9 +24,20 @@ const steps = [
   'Funding Requirements'
 ];
 
+interface BusinessPlanData {
+  executiveSummary: string;
+  businessDescription: string;
+  marketAnalysis: string;
+  organization: string;
+  serviceLine: string;
+  marketing: string;
+  financial: string;
+  funding: string;
+}
+
 const BusinessPlan = () => {
   const [activeStep, setActiveStep] = useState(0);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<BusinessPlanData>({
     executiveSummary: '',
     businessDescription: '',
     marketAnalysis: '',
@@ -50,7 +56,7 @@ const BusinessPlan = () => {
     setActiveStep((prevStep) => prevStep - 1);
   };
 
-  const handleChange = (field: string) => (event: any) => {
+  const handleChange = (field: keyof BusinessPlanData) => (event: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
       [field]: event.target.value
@@ -200,14 +206,17 @@ const BusinessPlan = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h4" gutterBottom>
-        Business Plan Template
-      </Typography>
-      <Typography variant="subtitle1" color="text.secondary" paragraph>
-        Create a comprehensive business plan for your service business
-      </Typography>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <DescriptionIcon fontSize="large" color="primary" />
+          Business Plan Builder
+        </Typography>
+        <Typography variant="subtitle1" color="text.secondary">
+          Create a comprehensive business plan for your service business
+        </Typography>
+      </Box>
 
-      <Paper sx={{ p: 3, mb: 3 }}>
+      <Paper sx={{ p: 3 }}>
         <Stepper activeStep={activeStep} alternativeLabel>
           {steps.map((label) => (
             <Step key={label}>
@@ -249,6 +258,10 @@ const BusinessPlan = () => {
           </Box>
         </Box>
       </Paper>
+
+      <Alert severity="info" sx={{ mt: 2 }}>
+        Your business plan will be saved automatically as you progress through each section.
+      </Alert>
     </Container>
   );
 };

@@ -33,7 +33,7 @@ export interface Post {
   category: string;
   tags: string[];
   createdAt: Date;
-  updatedAt: Date;
+  updatedAt?: Date;
   reactions: { [key: string]: Reaction };
   commentCount: number;
   isHtml?: boolean;
@@ -44,28 +44,27 @@ export interface Post {
 
 export interface Comment {
   id: string;
-  postId: string;
-  authorId: string;
   content: string;
+  authorId: string;
   createdAt: Date;
-  updatedAt: Date;
-  reactions: { [key: string]: Reaction };
-  parentCommentId?: string;
-  isHtml?: boolean;
+  updatedAt?: Date;
+  parentId: string | null;
+  postId: string;
+  likes: number;
+  likedBy: string[];
+  replies?: Comment[];
 }
 
 export interface Notification {
   id: string;
   userId: string;
-  type: 'reaction' | 'comment' | 'mention' | 'follow';
-  sourceUserId: string;
-  postId?: string;
-  commentId?: string;
-  createdAt: Date;
+  type: 'comment' | 'reaction' | 'mention' | 'follow';
   read: boolean;
-  data?: {
-    reaction?: string;
-    preview?: string;
+  createdAt: Date;
+  data: {
+    postId?: string;
+    commentId?: string;
+    fromUserId: string;
   };
 }
 

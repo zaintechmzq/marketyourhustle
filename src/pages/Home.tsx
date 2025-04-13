@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Container, Typography, Grid, Paper, Button, TextField, Divider, IconButton } from '@mui/material';
+import { Box, Container, Typography, Grid, Paper, Button, TextField, Divider, IconButton, Card, CardMedia, CardContent } from '@mui/material';
 import { motion } from 'framer-motion';
 import { 
   TrendingUp as TrendingUpIcon, 
@@ -7,7 +7,10 @@ import {
   MonetizationOn as MonetizationOnIcon,
   Business as BusinessIcon,
   Store as StoreIcon,
-  Group as GroupIcon
+  Group as GroupIcon,
+  Build as BuildIcon,
+  Description as DescriptionIcon,
+  School as SchoolIcon
 } from '@mui/icons-material';
 import FacebookIcon from '@mui/icons-material/Facebook';
 import TwitterIcon from '@mui/icons-material/Twitter';
@@ -22,6 +25,30 @@ import halalGuysImg from '../assets/images/THE-HALAL-GUYS.jpg';
 
 const MotionBox = motion(Box);
 
+const quickStartLinks = [
+  {
+    title: "Getting Started Guide",
+    description: "Learn the basics of starting your service business",
+    icon: <SchoolIcon />,
+    path: "/learn",
+    image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=800&auto=format&fit=crop&q=80",
+  },
+  {
+    title: "Business Tools",
+    description: "Interactive tools to plan and grow your business",
+    icon: <BuildIcon />,
+    path: "/learn/tools",
+    image: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&auto=format&fit=crop&q=80",
+  },
+  {
+    title: "Resource Library",
+    description: "Download templates, guides, and more",
+    icon: <DescriptionIcon />,
+    path: "/learn/resources",
+    image: "https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&auto=format&fit=crop&q=80",
+  }
+];
+
 const Home = () => {
   const featuredStories = [
     {
@@ -31,6 +58,22 @@ const Home = () => {
       path: "/learn/articles/car-detailing-business",
       readTime: "10 min read",
       revenue: "$15,000+"
+    },
+    {
+      title: "Dog Walking Empire",
+      description: "How a dog lover built a thriving business with 50+ clients",
+      image: "https://images.unsplash.com/photo-1494947665470-20322015e3a8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80",
+      path: "/learn/articles/dog-walker-success",
+      readTime: "12 min read",
+      revenue: "$6,000+"
+    },
+    {
+      title: "Business Automation Guide",
+      description: "Essential tools to streamline your service business",
+      image: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80",
+      path: "/learn/articles/business-automation-tools",
+      readTime: "15 min read",
+      revenue: "Save 20+ hrs/week"
     },
     {
       title: "The Halal Guys",
@@ -160,6 +203,95 @@ const Home = () => {
           </MotionBox>
         </Container>
       </Box>
+
+      {/* Quick Start Section */}
+      <Container maxWidth="lg" sx={{ py: 6 }}>
+        <Typography variant="h4" gutterBottom align="center" sx={{ fontWeight: 600, mb: 1 }}>
+          Quick Start
+        </Typography>
+        <Typography 
+          variant="subtitle1" 
+          color="text.secondary" 
+          align="center" 
+          paragraph 
+          sx={{ mb: 4, maxWidth: '600px', mx: 'auto' }}
+        >
+          Everything you need to start and grow your service business
+        </Typography>
+        <Grid container spacing={4}>
+          {quickStartLinks.map((link) => (
+            <Grid item xs={12} md={4} key={link.title}>
+              <Card 
+                component={RouterLink} 
+                to={link.path}
+                sx={{ 
+                  height: '100%', 
+                  display: 'flex', 
+                  flexDirection: 'column',
+                  textDecoration: 'none',
+                  transition: 'all 0.3s ease-in-out',
+                  '&:hover': {
+                    transform: 'translateY(-8px)',
+                    boxShadow: (theme) => `0 12px 24px ${theme.palette.primary.light}25`,
+                  },
+                  borderRadius: 2,
+                  overflow: 'hidden',
+                  border: '1px solid',
+                  borderColor: 'divider',
+                }}
+              >
+                <Box sx={{ position: 'relative', paddingTop: '60%' }}>
+                  <CardMedia
+                    component="img"
+                    image={link.image}
+                    alt={link.title}
+                    sx={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                    }}
+                  />
+                </Box>
+                <CardContent sx={{ flexGrow: 1, p: 3 }}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    mb: 2,
+                    gap: 1.5 
+                  }}>
+                    {React.cloneElement(link.icon, { 
+                      sx: { 
+                        color: 'primary.main',
+                        fontSize: '1.5rem'
+                      } 
+                    })}
+                    <Typography 
+                      variant="h6" 
+                      component="div"
+                      sx={{ 
+                        fontWeight: 600,
+                        color: 'text.primary'
+                      }}
+                    >
+                      {link.title}
+                    </Typography>
+                  </Box>
+                  <Typography 
+                    variant="body2" 
+                    color="text.secondary"
+                    sx={{ lineHeight: 1.6 }}
+                  >
+                    {link.description}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      </Container>
 
       {/* Featured Stories */}
       <Container maxWidth="lg" sx={{ py: 8 }}>

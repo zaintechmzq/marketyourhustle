@@ -9,7 +9,8 @@ import Category from './pages/Category';
 import Landing from './pages/Landing';
 import Dashboard from './pages/Dashboard';
 import CommunityHub from './pages/community/CommunityHub';
-import ProtectedRoute from './components/ProtectedRoute';
+import AuthRoute from './components/AuthRoute';
+import Auth from './pages/Auth';
 import MuslimOwnedBusinesses from './pages/learn/MuslimOwnedBusinesses';
 import QahwahHouse from './pages/learn/articles/qahwah-house';
 import Qamaria from './pages/learn/articles/Qamaria';
@@ -19,7 +20,20 @@ import LuxuryHomeCleaning from './pages/learn/articles/luxury-home-cleaning';
 import PetGroomingVan from './pages/learn/articles/pet-grooming-van';
 import LandscapingBusiness from './pages/learn/articles/landscaping-business';
 import BalloonGarlandSetup from './pages/learn/articles/balloon-garland-setup';
+import BusinessAutomationTools from './pages/learn/articles/business-automation-tools';
+import DogWalkerSuccess from './pages/learn/articles/dog-walker-success';
 import ProfilePage from './pages/profile/ProfilePage';
+import LearningResources from './pages/learn/LearningResources';
+import ResourceLibrary from './pages/learn/ResourceLibrary';
+import BusinessTools from './pages/learn/BusinessTools';
+
+// Import tool components
+import RevenueCalculator from './pages/tools/RevenueCalculator';
+import PricingStrategy from './pages/tools/PricingStrategy';
+import AppointmentScheduler from './pages/tools/AppointmentScheduler';
+import BusinessAnalytics from './pages/tools/BusinessAnalytics';
+import GrowthPlanner from './pages/tools/GrowthPlanner';
+import CostCalculator from './pages/tools/CostCalculator';
 
 const theme = createTheme({
   palette: {
@@ -106,180 +120,292 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<Landing />} />
+          <Route path="/auth" element={<Auth />} />
           <Route
             path="/home"
             element={
-              <ProtectedRoute>
+              <AuthRoute>
                 <>
                   <Navbar />
                   <Home />
                 </>
-              </ProtectedRoute>
+              </AuthRoute>
             }
           />
           <Route
-            path="/community"
+            path="/learn"
             element={
-              <ProtectedRoute>
+              <AuthRoute>
                 <>
                   <Navbar />
-                  <CommunityHub />
+                  <LearningResources />
                 </>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <>
-                  <Navbar />
-                  <Dashboard />
-                </>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/story/:id"
-            element={
-              <ProtectedRoute>
-                <>
-                  <Navbar />
-                  <Story />
-                </>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/category/:category"
-            element={
-              <ProtectedRoute>
-                <>
-                  <Navbar />
-                  <Category />
-                </>
-              </ProtectedRoute>
+              </AuthRoute>
             }
           />
           <Route
             path="/learn/muslim-owned-businesses"
             element={
-              <ProtectedRoute>
+              <AuthRoute>
                 <>
                   <Navbar />
                   <MuslimOwnedBusinesses />
                 </>
-              </ProtectedRoute>
+              </AuthRoute>
             }
           />
           <Route
             path="/learn/articles/qahwah-house"
             element={
-              <ProtectedRoute>
+              <AuthRoute>
                 <>
                   <Navbar />
                   <QahwahHouse />
                 </>
-              </ProtectedRoute>
+              </AuthRoute>
             }
           />
           <Route
             path="/learn/articles/qamaria"
             element={
-              <ProtectedRoute>
+              <AuthRoute>
                 <>
                   <Navbar />
                   <Qamaria />
                 </>
-              </ProtectedRoute>
+              </AuthRoute>
             }
           />
           <Route
             path="/learn/articles/halal-guys"
             element={
-              <ProtectedRoute>
+              <AuthRoute>
                 <>
                   <Navbar />
                   <HalalGuys />
                 </>
-              </ProtectedRoute>
+              </AuthRoute>
             }
           />
           <Route
             path="/learn/articles/car-detailing-business"
             element={
-              <ProtectedRoute>
+              <AuthRoute>
                 <>
                   <Navbar />
                   <CarDetailingBusiness />
                 </>
-              </ProtectedRoute>
+              </AuthRoute>
             }
           />
           <Route
             path="/learn/articles/luxury-home-cleaning"
             element={
-              <ProtectedRoute>
+              <AuthRoute>
                 <>
                   <Navbar />
                   <LuxuryHomeCleaning />
                 </>
-              </ProtectedRoute>
+              </AuthRoute>
             }
           />
           <Route
             path="/learn/articles/pet-grooming-van"
             element={
-              <ProtectedRoute>
+              <AuthRoute>
                 <>
                   <Navbar />
                   <PetGroomingVan />
                 </>
-              </ProtectedRoute>
+              </AuthRoute>
             }
           />
           <Route
             path="/learn/articles/landscaping-business"
             element={
-              <ProtectedRoute>
+              <AuthRoute>
                 <>
                   <Navbar />
                   <LandscapingBusiness />
                 </>
-              </ProtectedRoute>
+              </AuthRoute>
             }
           />
           <Route
             path="/learn/articles/balloon-garland-setup"
             element={
-              <ProtectedRoute>
+              <AuthRoute>
                 <>
                   <Navbar />
                   <BalloonGarlandSetup />
                 </>
-              </ProtectedRoute>
+              </AuthRoute>
             }
           />
           <Route
-            path="/profile/:userId"
+            path="/learn/articles/business-automation-tools"
             element={
-              <ProtectedRoute>
+              <AuthRoute>
+                <>
+                  <Navbar />
+                  <BusinessAutomationTools />
+                </>
+              </AuthRoute>
+            }
+          />
+          <Route
+            path="/learn/articles/dog-walker-success"
+            element={
+              <AuthRoute>
+                <>
+                  <Navbar />
+                  <DogWalkerSuccess />
+                </>
+              </AuthRoute>
+            }
+          />
+          <Route
+            path="/community"
+            element={
+              <AuthRoute requireFirebaseAuth>
+                <>
+                  <Navbar />
+                  <CommunityHub />
+                </>
+              </AuthRoute>
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+              <AuthRoute requireFirebaseAuth>
+                <>
+                  <Navbar />
+                  <Dashboard />
+                </>
+              </AuthRoute>
+            }
+          />
+          <Route
+            path="/story/:id"
+            element={
+              <AuthRoute requireFirebaseAuth>
+                <>
+                  <Navbar />
+                  <Story />
+                </>
+              </AuthRoute>
+            }
+          />
+          <Route
+            path="/category/:category"
+            element={
+              <AuthRoute requireFirebaseAuth>
+                <>
+                  <Navbar />
+                  <Category />
+                </>
+              </AuthRoute>
+            }
+          />
+          <Route
+            path="/profile/:userId?"
+            element={
+              <AuthRoute requireFirebaseAuth>
                 <>
                   <Navbar />
                   <ProfilePage />
                 </>
-              </ProtectedRoute>
+              </AuthRoute>
             }
           />
           <Route
-            path="/profile"
+            path="/learn/resources"
             element={
-              <ProtectedRoute>
+              <AuthRoute>
                 <>
                   <Navbar />
-                  <ProfilePage />
+                  <ResourceLibrary />
                 </>
-              </ProtectedRoute>
+              </AuthRoute>
+            }
+          />
+          <Route
+            path="/learn/tools"
+            element={
+              <AuthRoute>
+                <>
+                  <Navbar />
+                  <BusinessTools />
+                </>
+              </AuthRoute>
+            }
+          />
+          {/* Tool Routes */}
+          <Route
+            path="/tools/RevenueCalculator"
+            element={
+              <AuthRoute>
+                <>
+                  <Navbar />
+                  <RevenueCalculator />
+                </>
+              </AuthRoute>
+            }
+          />
+          <Route
+            path="/tools/PricingStrategy"
+            element={
+              <AuthRoute>
+                <>
+                  <Navbar />
+                  <PricingStrategy />
+                </>
+              </AuthRoute>
+            }
+          />
+          <Route
+            path="/tools/AppointmentScheduler"
+            element={
+              <AuthRoute>
+                <>
+                  <Navbar />
+                  <AppointmentScheduler />
+                </>
+              </AuthRoute>
+            }
+          />
+          <Route
+            path="/tools/BusinessAnalytics"
+            element={
+              <AuthRoute>
+                <>
+                  <Navbar />
+                  <BusinessAnalytics />
+                </>
+              </AuthRoute>
+            }
+          />
+          <Route
+            path="/tools/GrowthPlanner"
+            element={
+              <AuthRoute>
+                <>
+                  <Navbar />
+                  <GrowthPlanner />
+                </>
+              </AuthRoute>
+            }
+          />
+          <Route
+            path="/tools/CostCalculator"
+            element={
+              <AuthRoute>
+                <>
+                  <Navbar />
+                  <CostCalculator />
+                </>
+              </AuthRoute>
             }
           />
         </Routes>

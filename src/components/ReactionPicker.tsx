@@ -9,16 +9,14 @@ import {
 } from '@mui/material';
 import AddReactionIcon from '@mui/icons-material/AddReaction';
 
-interface Reaction {
-  emoji: string;
-  label: string;
-  count: number;
-  reacted: boolean;
-}
-
 interface ReactionPickerProps {
-  reactions: Reaction[];
-  onReact: (reaction: string) => void;
+  reactions: Array<{
+    emoji: string;
+    label: string;
+    count: number;
+    reacted: boolean;
+  }>;
+  onReact: (emoji: string) => void;
 }
 
 const AVAILABLE_REACTIONS = [

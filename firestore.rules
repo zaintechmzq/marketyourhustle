@@ -11,6 +11,12 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    // Email entries collection
+    match /emailEntries/{entryId} {
+      allow create: if true;
+      allow read, update, delete: if false;
+    }
+
     // Posts collection
     match /posts/{postId} {
       allow read: if true;

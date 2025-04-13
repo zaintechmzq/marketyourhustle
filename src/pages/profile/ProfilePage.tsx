@@ -17,6 +17,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Link,
 } from '@mui/material';
 import {
   Edit as EditIcon,
@@ -28,6 +29,7 @@ import {
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from '../../firebase/config';
 import { onAuthStateChanged } from 'firebase/auth';
+import EditProfileDialog from '../../components/EditProfileDialog';
 
 interface UserProfile {
   uid: string;
@@ -77,6 +79,7 @@ const ProfilePage = () => {
   const [tabValue, setTabValue] = useState(0);
   const [isAuthChecking, setIsAuthChecking] = useState(true);
   const [currentUser, setCurrentUser] = useState(auth.currentUser);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   // Handle auth state
   useEffect(() => {
@@ -110,71 +113,71 @@ const ProfilePage = () => {
     social: {}
   });
 
-  // Fetch profile data
-  useEffect(() => {
-    const fetchProfile = async () => {
-      if (isAuthChecking || !currentUser) return;
+  const fetchProfile = async () => {
+    if (isAuthChecking || !currentUser) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
       
-      try {
-        setLoading(true);
-        setError(null);
+      const targetUserId = userId || currentUser.uid;
+      console.log("Fetching profile for:", targetUserId);
+
+      const userRef = doc(db, 'users', targetUserId);
+      const userDoc = await getDoc(userRef);
+
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        console.log("Found user data:", userData);
         
-        const targetUserId = userId || currentUser.uid;
-        console.log("Fetching profile for:", targetUserId);
-
-        const userRef = doc(db, 'users', targetUserId);
-        const userDoc = await getDoc(userRef);
-
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          console.log("Found user data:", userData);
-          
-          // Create a new profile object with all fields
-          const profileData: UserProfile = {
-            uid: targetUserId,
-            email: userData.email || '',
-            displayName: userData.displayName || 'Anonymous User',
-            photoURL: userData.photoURL || '',
-            bio: userData.bio || '',
-            businessType: userData.businessType || '',
-            reputation: userData.reputation || 0,
-            badges: userData.badges || [],
-            social: userData.social || {},
-            website: userData.website || '',
-            createdAt: userData.createdAt || new Date(),
-            updatedAt: userData.updatedAt || new Date()
+        // Create a new profile object with all fields
+        const profileData: UserProfile = {
+          uid: targetUserId,
+          email: userData.email || '',
+          displayName: userData.displayName || 'Anonymous User',
+          photoURL: userData.photoURL || '',
+          bio: userData.bio || '',
+          businessType: userData.businessType || '',
+          reputation: userData.reputation || 0,
+          badges: userData.badges || [],
+          social: userData.social || {},
+          website: userData.website || '',
+          createdAt: userData.createdAt || new Date(),
+          updatedAt: userData.updatedAt || new Date()
+        };
+        
+        setProfile(profileData);
+      } else {
+        console.log("No existing profile, creating new one");
+        if (targetUserId === currentUser.uid) {
+          const newUserProfile = createNewUserProfile(currentUser);
+          const profileWithTimestamps = {
+            ...newUserProfile,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
           };
           
-          setProfile(profileData);
+          await setDoc(userRef, profileWithTimestamps);
+          
+          setProfile({
+            ...newUserProfile,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          } as UserProfile);
         } else {
-          console.log("No existing profile, creating new one");
-          if (targetUserId === currentUser.uid) {
-            const newUserProfile = createNewUserProfile(currentUser);
-            const profileWithTimestamps = {
-              ...newUserProfile,
-              createdAt: serverTimestamp(),
-              updatedAt: serverTimestamp()
-            };
-            
-            await setDoc(userRef, profileWithTimestamps);
-            
-            setProfile({
-              ...newUserProfile,
-              createdAt: new Date(),
-              updatedAt: new Date()
-            } as UserProfile);
-          } else {
-            setError('User profile not found');
-          }
+          setError('User profile not found');
         }
-      } catch (err) {
-        console.error('Error fetching profile:', err);
-        setError('Error loading profile. Please try again.');
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (err) {
+      console.error('Error fetching profile:', err);
+      setError('Error loading profile. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  // Fetch profile data
+  useEffect(() => {
     fetchProfile();
   }, [userId, currentUser, isAuthChecking]);
 
@@ -207,6 +210,15 @@ const ProfilePage = () => {
     } catch (err) {
       return 'Invalid date';
     }
+  };
+
+  const handleEditProfile = () => {
+    setEditDialogOpen(true);
+  };
+
+  const handleProfileUpdate = () => {
+    // Refresh profile data
+    fetchProfile();
   };
 
   if (loading || isAuthChecking) {
@@ -267,19 +279,35 @@ const ProfilePage = () => {
   return (
     <Container maxWidth="lg">
       <Box sx={{ py: 4 }}>
-        <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
+        <Paper elevation={2} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
           <Grid container spacing={3}>
             <Grid item xs={12} md={3}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center',
+                position: 'relative'
+              }}>
                 <Avatar
-                  src={profile.photoURL}
-                  sx={{ width: 150, height: 150, mb: 2 }}
+                  src={profile?.photoURL}
+                  sx={{ 
+                    width: 150, 
+                    height: 150, 
+                    mb: 2,
+                    boxShadow: 2
+                  }}
                 />
                 {isOwnProfile && (
                   <Button
                     variant="outlined"
                     startIcon={<EditIcon />}
-                    sx={{ mb: 2 }}
+                    onClick={handleEditProfile}
+                    sx={{ 
+                      mb: 2,
+                      borderRadius: 2,
+                      textTransform: 'none',
+                      fontWeight: 500
+                    }}
                   >
                     Edit Profile
                   </Button>
@@ -288,28 +316,42 @@ const ProfilePage = () => {
             </Grid>
             <Grid item xs={12} md={9}>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h4" component="h1">
-                  {profile.displayName}
+                <Typography variant="h4" component="h1" sx={{ fontWeight: 500 }}>
+                  {profile?.displayName}
                 </Typography>
               </Box>
-              <Typography variant="body1" color="text.secondary" paragraph>
-                {profile.bio || 'No bio provided'}
+              <Typography 
+                variant="body1" 
+                color="text.secondary" 
+                paragraph
+                sx={{
+                  whiteSpace: 'pre-wrap',
+                  mb: 3
+                }}
+              >
+                {profile?.bio || 'No bio provided'}
               </Typography>
-              <Box sx={{ mb: 2 }}>
-                {profile.businessType && (
+              <Box sx={{ mb: 3 }}>
+                {profile?.businessType && (
                   <Chip
                     label={profile.businessType}
-                    sx={{ mr: 1, mb: 1 }}
+                    sx={{ 
+                      mr: 1, 
+                      mb: 1,
+                      backgroundColor: '#FF7F50',
+                      color: 'white',
+                      fontWeight: 500
+                    }}
                   />
                 )}
-                {profile.reputation && (
+                {profile?.reputation && (
                   <Chip
                     label={`${profile.reputation} reputation`}
                     color="primary"
                     sx={{ mr: 1, mb: 1 }}
                   />
                 )}
-                {profile.badges?.map((badge) => (
+                {profile?.badges?.map((badge) => (
                   <Chip
                     key={badge}
                     label={badge}
@@ -318,39 +360,63 @@ const ProfilePage = () => {
                   />
                 ))}
               </Box>
-              <Box>
-                {profile.website && (
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                {profile?.website && (
                   <IconButton
                     href={profile.website}
                     target="_blank"
                     rel="noopener noreferrer"
+                    sx={{
+                      backgroundColor: 'action.hover',
+                      '&:hover': {
+                        backgroundColor: 'action.selected',
+                      },
+                    }}
                   >
                     <WebsiteIcon />
                   </IconButton>
                 )}
-                {profile.social?.linkedin && (
+                {profile?.social?.linkedin && (
                   <IconButton
                     href={profile.social.linkedin}
                     target="_blank"
                     rel="noopener noreferrer"
+                    sx={{
+                      backgroundColor: 'action.hover',
+                      '&:hover': {
+                        backgroundColor: 'action.selected',
+                      },
+                    }}
                   >
                     <LinkedInIcon />
                   </IconButton>
                 )}
-                {profile.social?.twitter && (
+                {profile?.social?.twitter && (
                   <IconButton
                     href={profile.social.twitter}
                     target="_blank"
                     rel="noopener noreferrer"
+                    sx={{
+                      backgroundColor: 'action.hover',
+                      '&:hover': {
+                        backgroundColor: 'action.selected',
+                      },
+                    }}
                   >
                     <TwitterIcon />
                   </IconButton>
                 )}
-                {profile.social?.instagram && (
+                {profile?.social?.instagram && (
                   <IconButton
                     href={profile.social.instagram}
                     target="_blank"
                     rel="noopener noreferrer"
+                    sx={{
+                      backgroundColor: 'action.hover',
+                      '&:hover': {
+                        backgroundColor: 'action.selected',
+                      },
+                    }}
                   >
                     <InstagramIcon />
                   </IconButton>
@@ -360,8 +426,18 @@ const ProfilePage = () => {
           </Grid>
         </Paper>
 
-        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Tabs value={tabValue} onChange={handleTabChange}>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+          <Tabs 
+            value={tabValue} 
+            onChange={handleTabChange}
+            sx={{
+              '& .MuiTab-root': {
+                textTransform: 'none',
+                fontWeight: 500,
+                minWidth: 100,
+              },
+            }}
+          >
             <Tab label="Posts" />
             <Tab label="Activity" />
             <Tab label="About" />
@@ -369,40 +445,86 @@ const ProfilePage = () => {
         </Box>
 
         <TabPanel value={tabValue} index={0}>
-          <Typography variant="h6">Posts</Typography>
-          {/* Add posts component here */}
+          <Typography variant="h6" sx={{ mb: 2 }}>Posts</Typography>
+          {/* Add posts content */}
         </TabPanel>
 
         <TabPanel value={tabValue} index={1}>
-          <Typography variant="h6">Activity</Typography>
-          {/* Add activity component here */}
+          <Typography variant="h6" sx={{ mb: 2 }}>Activity</Typography>
+          {/* Add activity content */}
         </TabPanel>
 
         <TabPanel value={tabValue} index={2}>
           <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
-              <Typography variant="h6" gutterBottom>Business Details</Typography>
-              <Typography>
-                <strong>Type:</strong> {profile.businessType || 'Not specified'}
-              </Typography>
-              <Typography>
-                <strong>Website:</strong> {profile.website || 'Not specified'}
-              </Typography>
+              <Paper sx={{ p: 3, borderRadius: 2 }}>
+                <Typography variant="h6" gutterBottom>Business Details</Typography>
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="subtitle2" color="text.secondary">
+                    Business Type
+                  </Typography>
+                  <Typography>
+                    {profile?.businessType || 'Not specified'}
+                  </Typography>
+                </Box>
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="subtitle2" color="text.secondary">
+                    Website
+                  </Typography>
+                  <Typography>
+                    {profile?.website ? (
+                      <Link 
+                        href={profile.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        sx={{ 
+                          color: 'primary.main',
+                          textDecoration: 'none',
+                          '&:hover': {
+                            textDecoration: 'underline'
+                          }
+                        }}
+                      >
+                        {profile.website}
+                      </Link>
+                    ) : 'Not specified'}
+                  </Typography>
+                </Box>
+              </Paper>
             </Grid>
             <Grid item xs={12} md={6}>
-              <Typography variant="h6" gutterBottom>Account Info</Typography>
-              <Typography>
-                <strong>Member since:</strong> {' '}
-                {formatDate(profile.createdAt)}
-              </Typography>
-              <Typography>
-                <strong>Last updated:</strong> {' '}
-                {formatDate(profile.updatedAt)}
-              </Typography>
+              <Paper sx={{ p: 3, borderRadius: 2 }}>
+                <Typography variant="h6" gutterBottom>Account Info</Typography>
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="subtitle2" color="text.secondary">
+                    Member since
+                  </Typography>
+                  <Typography>
+                    {formatDate(profile?.createdAt)}
+                  </Typography>
+                </Box>
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="subtitle2" color="text.secondary">
+                    Last updated
+                  </Typography>
+                  <Typography>
+                    {formatDate(profile?.updatedAt)}
+                  </Typography>
+                </Box>
+              </Paper>
             </Grid>
           </Grid>
         </TabPanel>
       </Box>
+
+      {profile && (
+        <EditProfileDialog
+          open={editDialogOpen}
+          onClose={() => setEditDialogOpen(false)}
+          profile={profile}
+          onUpdate={handleProfileUpdate}
+        />
+      )}
     </Container>
   );
 };

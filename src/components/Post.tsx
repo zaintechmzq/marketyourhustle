@@ -13,66 +13,123 @@ import {
   MenuItem,
   Button,
   TextField,
+  Tooltip,
+  Link,
+  Divider,
 } from '@mui/material';
 import {
   BookmarkBorder as BookmarkIcon,
   Bookmark as BookmarkFilled,
   Share as ShareIcon,
   MoreVert as MoreVertIcon,
+  LocalOffer as TagIcon,
+  Category as CategoryIcon,
+  ThumbUp as ThumbUpIcon,
+  Comment as CommentIcon,
 } from '@mui/icons-material';
+import { Link as RouterLink } from 'react-router-dom';
 import { Post as PostType } from '../types/community';
 import ReactionPicker from './ReactionPicker';
-import { useReactions, useBookmarks, useComments } from '../hooks/useFirebase';
-import { auth } from '../firebase/config';
+import { useReactions } from '../hooks/useReactions';
+import { useBookmarks } from '../hooks/useBookmarks';
+import { useComments } from '../hooks/useComments';
+import { auth, db } from '../firebase/config';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../firebase/config';
+import { formatRelativeTime, formatFullDate } from '../utils/dateUtils';
+import ThreadedComments from './ThreadedComments';
 
 interface PostProps {
   post: PostType;
   onComment: (content: string) => Promise<void>;
 }
 
+const REACTION_LABELS: { [key: string]: string } = {
+  '👍': 'Like',
+  '❤️': 'Love',
+  '🎉': 'Celebrate',
+  '💡': 'Insightful',
+  '🙏': 'Thanks',
+  '🔥': 'Hot',
+};
+
 const Post: React.FC<PostProps> = ({ post, onComment }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [commentContent, setCommentContent] = useState('');
-  const { addReaction } = useReactions(post.id);
+  const [authorData, setAuthorData] = useState<any>(null);
+  const { addReaction, removeReaction } = useReactions(post.id);
   const { addBookmark, removeBookmark } = useBookmarks();
-  const { comments, loading: commentsLoading, addComment } = useComments(post.id);
+  const { 
+    comments, 
+    loading: commentsLoading, 
+    addComment,
+    deleteComment,
+    editComment,
+    likeComment 
+  } = useComments(post.id);
   const user = auth.currentUser;
   const [userNames, setUserNames] = useState<{[key: string]: string}>({});
+  const [userAvatars, setUserAvatars] = useState<{[key: string]: string}>({});
 
   useEffect(() => {
-    const fetchUserNames = async () => {
+    const fetchAuthorData = async () => {
+      try {
+        const authorDoc = await getDoc(doc(db, 'users', post.authorId));
+        if (authorDoc.exists()) {
+          setAuthorData(authorDoc.data());
+        }
+      } catch (err) {
+        console.error('Error fetching author data:', err);
+      }
+    };
+    fetchAuthorData();
+  }, [post.authorId]);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
       const userIds = Array.from(new Set(comments.map(comment => comment.authorId)));
       const names: {[key: string]: string} = {};
+      const avatars: {[key: string]: string} = {};
       
       for (const userId of userIds) {
         try {
           const userDoc = await getDoc(doc(db, 'users', userId));
           if (userDoc.exists()) {
-            names[userId] = userDoc.data().displayName || 'Anonymous User';
+            const userData = userDoc.data();
+            names[userId] = userData.displayName || 'Anonymous User';
+            avatars[userId] = userData.photoURL || '';
           } else {
             names[userId] = 'Unknown User';
+            avatars[userId] = '';
           }
         } catch (err) {
-          console.error('Error fetching user name:', err);
+          console.error('Error fetching user data:', err);
           names[userId] = 'Unknown User';
+          avatars[userId] = '';
         }
       }
       
       setUserNames(names);
+      setUserAvatars(avatars);
     };
 
     if (comments.length > 0) {
-      fetchUserNames();
+      fetchUserData();
     }
   }, [comments]);
 
-  const handleReact = async (emoji: string) => {
+  const handleReaction = async (emoji: string) => {
     try {
       await addReaction(emoji);
-    } catch (err) {
-      console.error('Error adding reaction:', err);
+    } catch (error) {
+      console.error('Error adding reaction:', error);
+    }
+  };
+
+  const handleRemoveReaction = async (emoji: string) => {
+    try {
+      await removeReaction(emoji);
+    } catch (error) {
+      console.error('Error removing reaction:', error);
     }
   };
 
@@ -92,20 +149,43 @@ const Post: React.FC<PostProps> = ({ post, onComment }) => {
     navigator.clipboard.writeText(window.location.href + '/post/' + post.id);
   };
 
-  const handleSubmitComment = async () => {
-    if (!commentContent.trim()) return;
+  const handleSubmitComment = async (content: string, parentId?: string) => {
+    if (!content.trim()) return;
     
     try {
-      await addComment(commentContent);
-      setCommentContent('');
+      await addComment(content, parentId);
     } catch (err) {
       console.error('Error submitting comment:', err);
     }
   };
 
+  const handleLikeComment = async (commentId: string) => {
+    try {
+      await likeComment(commentId);
+    } catch (error) {
+      console.error('Error liking comment:', error);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    try {
+      await deleteComment(commentId);
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+    }
+  };
+
+  const handleEditComment = async (commentId: string, content: string) => {
+    try {
+      await editComment(commentId, content);
+    } catch (error) {
+      console.error('Error editing comment:', error);
+    }
+  };
+
   const reactions = Object.entries(post.reactions || {}).map(([emoji, data]) => ({
     emoji,
-    label: data.emoji,
+    label: REACTION_LABELS[emoji] || emoji,
     count: data.count,
     reacted: data.users?.includes(user?.uid || '') || false,
   }));
@@ -113,16 +193,58 @@ const Post: React.FC<PostProps> = ({ post, onComment }) => {
   const isBookmarked = post.bookmarkedBy?.includes(user?.uid || '') || false;
 
   return (
-    <Card sx={{ mb: 2 }}>
+    <Card sx={{ mb: 3, borderRadius: 2 }}>
       <CardHeader
-        avatar={<Avatar>U</Avatar>}
+        avatar={
+          <Avatar
+            src={authorData?.photoURL}
+            sx={{ width: 40, height: 40 }}
+          >
+            {authorData?.displayName?.charAt(0) || 'U'}
+          </Avatar>
+        }
         action={
           <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
             <MoreVertIcon />
           </IconButton>
         }
-        title={post.title}
-        subheader={new Date(post.createdAt).toLocaleDateString()}
+        title={
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Link
+              component={RouterLink}
+              to={`/profile/${post.authorId}`}
+              color="inherit"
+              sx={{ 
+                textDecoration: 'none',
+                fontWeight: 500,
+                '&:hover': {
+                  textDecoration: 'underline',
+                }
+              }}
+            >
+              {authorData?.displayName || 'Anonymous User'}
+            </Link>
+            {post.category && (
+              <Chip
+                label={post.category}
+                size="small"
+                sx={{
+                  backgroundColor: '#FF7F50',
+                  color: 'white',
+                  height: 24,
+                  fontWeight: 500,
+                }}
+              />
+            )}
+          </Box>
+        }
+        subheader={
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="caption" color="text.secondary">
+              {formatRelativeTime(post.createdAt)}
+            </Typography>
+          </Box>
+        }
       />
       <Menu
         anchorEl={anchorEl}
@@ -135,6 +257,9 @@ const Post: React.FC<PostProps> = ({ post, onComment }) => {
         </MenuItem>
       </Menu>
       <CardContent>
+        <Typography variant="h6" gutterBottom>
+          {post.title}
+        </Typography>
         {post.isHtml ? (
           <div dangerouslySetInnerHTML={{ __html: post.content }} />
         ) : (
@@ -144,67 +269,64 @@ const Post: React.FC<PostProps> = ({ post, onComment }) => {
         )}
         <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
           {post.tags?.map((tag) => (
-            <Chip key={tag} label={tag} size="small" />
+            <Chip
+              key={tag}
+              icon={<TagIcon sx={{ fontSize: 16 }} />}
+              label={tag}
+              size="small"
+              variant="outlined"
+              sx={{ height: 24 }}
+            />
           ))}
         </Box>
       </CardContent>
-      <CardActions disableSpacing>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1 }}>
-          <ReactionPicker
-            reactions={reactions}
-            onReact={handleReact}
-          />
-          <Box sx={{ flex: 1 }} />
-          <IconButton onClick={handleShare}>
-            <ShareIcon />
-          </IconButton>
-          <IconButton onClick={handleBookmark}>
-            {isBookmarked ? (
-              <BookmarkFilled color="primary" />
-            ) : (
-              <BookmarkIcon />
-            )}
-          </IconButton>
-        </Box>
+      <CardActions sx={{ px: 2, py: 1, borderTop: 1, borderColor: 'divider' }}>
+        <ReactionPicker
+          reactions={reactions}
+          onReact={(emoji) => {
+            if (reactions.some(r => r.emoji === emoji && r.reacted)) {
+              handleRemoveReaction(emoji);
+            } else {
+              handleReaction(emoji);
+            }
+          }}
+        />
+        <Button
+          size="small"
+          startIcon={<CommentIcon />}
+          sx={{ textTransform: 'none' }}
+        >
+          {comments.length}
+        </Button>
+        <Button
+          size="small"
+          startIcon={<ShareIcon />}
+          onClick={handleShare}
+          sx={{ textTransform: 'none' }}
+        >
+          Share
+        </Button>
+        <Button
+          size="small"
+          startIcon={isBookmarked ? <BookmarkFilled /> : <BookmarkIcon />}
+          onClick={handleBookmark}
+          sx={{
+            textTransform: 'none',
+            color: isBookmarked ? 'primary.main' : 'text.secondary',
+          }}
+        >
+          {isBookmarked ? 'Saved' : 'Save'}
+        </Button>
       </CardActions>
-      <Box sx={{ p: 2, pt: 0 }}>
-        <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-          {post.commentCount || 0} comments
-        </Typography>
-        
-        {/* Comments list */}
-        <Box sx={{ mb: 2 }}>
-          {commentsLoading ? (
-            <Typography variant="body2" color="text.secondary">Loading comments...</Typography>
-          ) : comments.length > 0 ? (
-            comments.map((comment) => (
-              <Box key={comment.id} sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                <Avatar sx={{ width: 32, height: 32 }}>
-                  {(userNames[comment.authorId] || 'U').charAt(0).toUpperCase()}
-                </Avatar>
-                <Box>
-                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                    {userNames[comment.authorId] || 'Loading...'}
-                  </Typography>
-                  <Typography variant="body2">
-                    {comment.content}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {new Date(comment.createdAt).toLocaleDateString()}
-                  </Typography>
-                </Box>
-              </Box>
-            ))
-          ) : (
-            <Typography variant="body2" color="text.secondary">
-              No comments yet
-            </Typography>
-          )}
-        </Box>
 
-        {/* Comment input */}
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Avatar sx={{ width: 32, height: 32 }}>
+      <Divider />
+
+      <Box sx={{ p: 2 }}>
+        <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+          <Avatar 
+            src={user?.photoURL || ''}
+            sx={{ width: 32, height: 32 }}
+          >
             {user?.email?.charAt(0).toUpperCase() || 'U'}
           </Avatar>
           <TextField
@@ -216,22 +338,36 @@ const Post: React.FC<PostProps> = ({ post, onComment }) => {
             onKeyPress={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                handleSubmitComment();
+                handleSubmitComment(commentContent);
+                setCommentContent('');
               }
             }}
             InputProps={{
-              endAdornment: (
-                <Button
-                  size="small"
-                  onClick={handleSubmitComment}
-                  disabled={!commentContent.trim()}
-                >
-                  Post
-                </Button>
-              ),
+              sx: {
+                borderRadius: 2,
+                backgroundColor: 'action.hover',
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'transparent',
+                },
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'divider',
+                },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'primary.main',
+                },
+              },
             }}
           />
         </Box>
+
+        <ThreadedComments
+          comments={comments}
+          postId={post.id}
+          onReply={handleSubmitComment}
+          onLike={handleLikeComment}
+          onDelete={handleDeleteComment}
+          onEdit={handleEditComment}
+        />
       </Box>
     </Card>
   );
