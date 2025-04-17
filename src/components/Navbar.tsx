@@ -20,7 +20,9 @@ import {
   DialogTitle,
   DialogContent,
   Grid,
-  ListSubheader
+  ListSubheader,
+  Badge,
+  Avatar
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -42,10 +44,14 @@ import {
   ChevronRight as ChevronRightIcon,
   Description as DescriptionIcon,
   Build as BuildIcon,
+  Message as MessageIcon,
+  NotificationsNone as NotificationsIcon,
 } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { auth } from '../firebase/config';
+import { useAuth } from '../contexts/AuthContext';
 import CloseIcon from '@mui/icons-material/Close';
+import { User } from 'firebase/auth';
 
 const categories = [
   { name: 'Wedding Services', icon: <CelebrationIcon /> },
@@ -61,7 +67,8 @@ const Navbar = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
-  const userEmail = localStorage.getItem('userEmail');
+  const location = useLocation();
+  const { currentUser } = useAuth() as { currentUser: User | null };
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [categoriesDialogOpen, setCategoriesDialogOpen] = useState(false);
@@ -90,14 +97,18 @@ const Navbar = () => {
     setMobileOpen(false);
   };
 
-  const handleSignOut = () => {
-    localStorage.removeItem('userEmail');
-    setMobileOpen(false);
-    navigate('/');
+  const handleSignOut = async () => {
+    try {
+      await auth.signOut();
+      setMobileOpen(false);
+      navigate('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   const handleLogoClick = () => {
-    if (userEmail) {
+    if (currentUser) {
       navigate('/home');
     } else {
       navigate('/');
@@ -112,6 +123,15 @@ const Navbar = () => {
   const handleCategorySelect = (category: string) => {
     handleCategoryClick(category);
     setCategoriesDialogOpen(false);
+  };
+
+  const isActiveRoute = (path: string) => {
+    return location.pathname === path;
+  };
+
+  const handleAuthNavigation = (isSignUp: boolean) => {
+    navigate('/auth', { state: { isSignUp } });
+    setMobileOpen(false);
   };
 
   const categoriesDialog = (
@@ -167,19 +187,122 @@ const Navbar = () => {
   );
 
   const drawer = (
-    <Box sx={{ width: 250 }}>
-      <List subheader={<ListSubheader>Main Navigation</ListSubheader>}>
-        <ListItem button onClick={() => handleNavigation('/home')}>
-          <ListItemIcon><HomeIcon /></ListItemIcon>
-          <ListItemText primary="Home" />
+    <Box sx={{ width: 250, height: '100%', backgroundColor: theme.palette.background.paper }}>
+      {currentUser && (
+        <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+            <Avatar src={currentUser.photoURL || undefined} alt={currentUser.displayName || 'User'}>
+              {currentUser.displayName?.[0] || currentUser.email?.[0] || 'U'}
+            </Avatar>
+            <Box>
+              <Typography variant="subtitle1" noWrap>
+                {currentUser.displayName || currentUser.email}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" noWrap>
+                View Profile
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
+      )}
+
+      <List 
+        subheader={
+          <ListSubheader sx={{ backgroundColor: 'inherit', fontWeight: 600 }}>
+            Main Navigation
+          </ListSubheader>
+        }
+      >
+        <ListItem 
+          button 
+          onClick={() => handleNavigation('/home')}
+          selected={isActiveRoute('/home')}
+          sx={{
+            borderRadius: 1,
+            mx: 1,
+            mb: 0.5,
+            '&.Mui-selected': {
+              backgroundColor: theme.palette.primary.main + '20',
+              '&:hover': {
+                backgroundColor: theme.palette.primary.main + '30',
+              }
+            }
+          }}
+        >
+          <ListItemIcon><HomeIcon color={isActiveRoute('/home') ? 'primary' : 'inherit'} /></ListItemIcon>
+          <ListItemText 
+            primary="Home" 
+            primaryTypographyProps={{
+              color: isActiveRoute('/home') ? 'primary' : 'inherit',
+              fontWeight: isActiveRoute('/home') ? 600 : 400
+            }}
+          />
         </ListItem>
-        <ListItem button onClick={() => handleNavigation('/dashboard')}>
-          <ListItemIcon><DashboardIcon /></ListItemIcon>
-          <ListItemText primary="Dashboard" />
-        </ListItem>
+
+        {currentUser && (
+          <>
+            <ListItem 
+              button 
+              onClick={() => handleNavigation('/dashboard')}
+              selected={isActiveRoute('/dashboard')}
+              sx={{
+                borderRadius: 1,
+                mx: 1,
+                mb: 0.5,
+                '&.Mui-selected': {
+                  backgroundColor: theme.palette.primary.main + '20',
+                  '&:hover': {
+                    backgroundColor: theme.palette.primary.main + '30',
+                  }
+                }
+              }}
+            >
+              <ListItemIcon>
+                <DashboardIcon color={isActiveRoute('/dashboard') ? 'primary' : 'inherit'} />
+              </ListItemIcon>
+              <ListItemText 
+                primary="Dashboard"
+                primaryTypographyProps={{
+                  color: isActiveRoute('/dashboard') ? 'primary' : 'inherit',
+                  fontWeight: isActiveRoute('/dashboard') ? 600 : 400
+                }}
+              />
+            </ListItem>
+
+            <ListItem 
+              button 
+              onClick={() => handleNavigation('/messages')}
+              selected={isActiveRoute('/messages')}
+              sx={{
+                borderRadius: 1,
+                mx: 1,
+                mb: 0.5,
+                '&.Mui-selected': {
+                  backgroundColor: theme.palette.primary.main + '20',
+                  '&:hover': {
+                    backgroundColor: theme.palette.primary.main + '30',
+                  }
+                }
+              }}
+            >
+              <ListItemIcon>
+                <Badge color="error" variant="dot">
+                  <MessageIcon color={isActiveRoute('/messages') ? 'primary' : 'inherit'} />
+                </Badge>
+              </ListItemIcon>
+              <ListItemText 
+                primary="Messages"
+                primaryTypographyProps={{
+                  color: isActiveRoute('/messages') ? 'primary' : 'inherit',
+                  fontWeight: isActiveRoute('/messages') ? 600 : 400
+                }}
+              />
+            </ListItem>
+          </>
+        )}
       </List>
 
-      <Divider />
+      <Divider sx={{ my: 1 }} />
       
       <List subheader={<ListSubheader>Getting Started</ListSubheader>}>
         <ListItem button onClick={() => handleNavigation('/learn')}>
@@ -217,29 +340,75 @@ const Navbar = () => {
       <Divider />
 
       <List subheader={<ListSubheader>Account</ListSubheader>}>
-        {userEmail && (
-          <ListItem button onClick={() => handleNavigation(`/profile/${auth.currentUser?.uid}`)}>
-            <ListItemIcon><PersonIcon /></ListItemIcon>
-            <ListItemText primary="Profile" />
-          </ListItem>
+        {currentUser ? (
+          <>
+            <ListItem button onClick={() => handleNavigation(`/profile/${currentUser.uid}`)}>
+              <ListItemIcon><PersonIcon /></ListItemIcon>
+              <ListItemText primary="Profile" />
+            </ListItem>
+            <ListItem button onClick={handleSignOut}>
+              <ListItemIcon><ExitToAppIcon /></ListItemIcon>
+              <ListItemText primary="Sign Out" />
+            </ListItem>
+          </>
+        ) : (
+          <>
+            <ListItem button onClick={() => handleAuthNavigation(false)}>
+              <ListItemIcon><ExitToAppIcon /></ListItemIcon>
+              <ListItemText primary="Sign In" />
+            </ListItem>
+            <ListItem 
+              button 
+              onClick={() => handleAuthNavigation(true)}
+              sx={{
+                backgroundColor: theme.palette.primary.main + '20',
+                '&:hover': {
+                  backgroundColor: theme.palette.primary.main + '30',
+                },
+                borderRadius: 1,
+                mx: 1,
+                mb: 0.5,
+              }}
+            >
+              <ListItemIcon>
+                <PersonIcon color="primary" />
+              </ListItemIcon>
+              <ListItemText 
+                primary="Sign Up" 
+                primaryTypographyProps={{
+                  color: 'primary',
+                  fontWeight: 600
+                }}
+              />
+            </ListItem>
+          </>
         )}
-        <ListItem button onClick={handleSignOut}>
-          <ListItemIcon><ExitToAppIcon /></ListItemIcon>
-          <ListItemText primary="Sign Out" />
-        </ListItem>
       </List>
     </Box>
   );
 
   return (
     <>
-      <AppBar position="sticky" color="default" elevation={1}>
-        <Toolbar>
+      <AppBar 
+        position="sticky" 
+        color="default" 
+        elevation={1}
+        sx={{
+          backgroundColor: theme.palette.background.paper,
+          borderBottom: 1,
+          borderColor: 'divider'
+        }}
+      >
+        <Toolbar sx={{ minHeight: { xs: 56, sm: 64 } }}>
           <IconButton
             color="inherit"
             edge="start"
             onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: 'none' } }}
+            sx={{ 
+              mr: 2, 
+              display: { sm: 'none' },
+              color: theme.palette.text.primary
+            }}
           >
             <MenuIcon />
           </IconButton>
@@ -251,7 +420,8 @@ const Navbar = () => {
               flexGrow: 1, 
               cursor: 'pointer',
               fontWeight: 700,
-              color: theme.palette.primary.main
+              color: theme.palette.primary.main,
+              fontSize: { xs: '1.1rem', sm: '1.25rem' }
             }}
             onClick={handleLogoClick}
           >
@@ -259,7 +429,7 @@ const Navbar = () => {
           </Typography>
 
           {!isMobile && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Button
                 color="inherit"
                 startIcon={<HomeIcon />}
@@ -267,6 +437,15 @@ const Navbar = () => {
               >
                 Home
               </Button>
+              {currentUser && (
+                <Button
+                  color="inherit"
+                  startIcon={<MessageIcon />}
+                  onClick={() => navigate('/messages')}
+                >
+                  Messages
+                </Button>
+              )}
               <Button
                 color="inherit"
                 startIcon={<SchoolIcon />}
@@ -302,16 +481,16 @@ const Navbar = () => {
               >
                 Tools
               </Button>
-              {userEmail && (
+              {currentUser && (
                 <Button
                   color="inherit"
                   startIcon={<PersonIcon />}
-                  onClick={() => navigate(`/profile/${auth.currentUser?.uid}`)}
+                  onClick={() => navigate(`/profile/${currentUser.uid}`)}
                 >
                   Profile
                 </Button>
               )}
-              {userEmail ? (
+              {currentUser ? (
                 <Button
                   color="inherit"
                   startIcon={<ExitToAppIcon />}
@@ -320,14 +499,52 @@ const Navbar = () => {
                   Sign Out
                 </Button>
               ) : (
-                <Button
-                  color="inherit"
-                  startIcon={<PersonIcon />}
-                  onClick={() => navigate('/')}
-                >
-                  Sign Up
-                </Button>
+                <>
+                  <Button
+                    color="inherit"
+                    onClick={() => handleAuthNavigation(false)}
+                    sx={{ fontWeight: 500 }}
+                  >
+                    Sign In
+                  </Button>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => handleAuthNavigation(true)}
+                    sx={{ 
+                      fontWeight: 500,
+                      '&:hover': {
+                        backgroundColor: theme.palette.primary.dark
+                      }
+                    }}
+                  >
+                    Sign Up
+                  </Button>
+                </>
               )}
+            </Box>
+          )}
+
+          {isMobile && currentUser && (
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <IconButton
+                size="large"
+                color="inherit"
+                onClick={() => navigate('/messages')}
+              >
+                <Badge color="error" variant="dot">
+                  <MessageIcon />
+                </Badge>
+              </IconButton>
+              <IconButton
+                size="large"
+                color="inherit"
+                onClick={() => navigate('/notifications')}
+              >
+                <Badge color="error" variant="dot">
+                  <NotificationsIcon />
+                </Badge>
+              </IconButton>
             </Box>
           )}
         </Toolbar>

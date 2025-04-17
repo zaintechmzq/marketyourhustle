@@ -5,7 +5,6 @@ import {
   Grid,
   Card,
   CardContent,
-  CardMedia,
   Button,
   Box,
   Chip,
@@ -19,100 +18,119 @@ import {
   Download as DownloadIcon,
   AccessTime as AccessTimeIcon,
   CloudDownload as CloudDownloadIcon,
+  AttachMoney as MoneyIcon,
+  Campaign as CampaignIcon,
+  Assignment as AssignmentIcon,
+  Instagram as InstagramIcon,
+  Calculate as CalculateIcon,
+  Handshake as HandshakeIcon,
 } from '@mui/icons-material';
 
 const resources = [
   {
     id: 1,
-    title: "Business Plan Template",
-    description: "Comprehensive business plan template with examples and guidelines for service-based businesses.",
+    title: "Halal Business Plan Template",
+    description: "Comprehensive business plan template specifically designed for Muslim entrepreneurs, including sections for halal certification, Islamic finance considerations, and ethical business practices.",
     type: "Template",
-    format: "PDF",
-    size: "2.5 MB",
+    format: "PDF & Word",
+    size: "3.2 MB",
     category: "Planning",
-    downloads: 1234,
-    image: "https://source.unsplash.com/random/400x300/?business-plan"
+    downloads: 2345,
+    icon: <AssignmentIcon />
   },
   {
     id: 2,
-    title: "Marketing Strategy Guide",
-    description: "Step-by-step guide to creating and implementing a marketing strategy for your service business.",
-    type: "Guide",
-    format: "PDF",
-    size: "3.1 MB",
+    title: "Social Media Content Calendar (Islamic Occasions)",
+    description: "12-month content calendar with key Islamic dates, Ramadan marketing ideas, and Eid promotions. Includes ready-to-use post templates and hashtag suggestions.",
+    type: "Template",
+    format: "Excel",
+    size: "2.8 MB",
     category: "Marketing",
-    downloads: 856,
-    image: "https://source.unsplash.com/random/400x300/?marketing"
+    downloads: 1876,
+    icon: <InstagramIcon />
   },
   {
     id: 3,
-    title: "Service Pricing Calculator",
-    description: "Excel spreadsheet to help you calculate optimal pricing for your services.",
+    title: "Halal Service Pricing Calculator",
+    description: "Advanced Excel calculator to help price your services fairly and profitably, considering zakat obligations and ethical pricing principles.",
     type: "Tool",
     format: "Excel",
-    size: "1.2 MB",
+    size: "1.5 MB",
     category: "Finance",
-    downloads: 2341,
-    image: "https://source.unsplash.com/random/400x300/?calculator"
+    downloads: 3210,
+    icon: <CalculateIcon />
   },
   {
     id: 4,
-    title: "Client Contract Template",
-    description: "Professional contract template for service providers with legal guidelines.",
+    title: "Shariah-Compliant Contract Templates",
+    description: "Professional contract templates reviewed by Islamic scholars, ensuring your business agreements are both legally sound and Shariah-compliant.",
     type: "Template",
     format: "Word",
-    size: "1.8 MB",
+    size: "2.1 MB",
     category: "Legal",
-    downloads: 1567,
-    image: "https://source.unsplash.com/random/400x300/?contract"
+    downloads: 1987,
+    icon: <HandshakeIcon />
   },
   {
     id: 5,
-    title: "Social Media Content Calendar",
-    description: "Monthly content calendar template with post ideas and scheduling tools.",
-    type: "Template",
-    format: "Excel",
-    size: "1.5 MB",
+    title: "Digital Marketing Guide for Muslim Businesses",
+    description: "Comprehensive guide on digital marketing strategies, including tips for modest advertising, targeting Muslim consumers, and building an authentic brand.",
+    type: "Guide",
+    format: "PDF",
+    size: "4.2 MB",
     category: "Marketing",
-    downloads: 1890,
-    image: "https://source.unsplash.com/random/400x300/?social-media"
+    downloads: 2543,
+    icon: <CampaignIcon />
   },
   {
     id: 6,
-    title: "Service Business Checklist",
-    description: "Comprehensive checklist for starting and running a service-based business.",
-    type: "Guide",
-    format: "PDF",
-    size: "1.1 MB",
-    category: "Planning",
-    downloads: 2156,
-    image: "https://source.unsplash.com/random/400x300/?checklist"
+    title: "Islamic Finance & Budgeting Template",
+    description: "Financial planning templates that incorporate Islamic principles, including profit-sharing calculations, zakat tracking, and interest-free financial projections.",
+    type: "Template",
+    format: "Excel",
+    size: "2.3 MB",
+    category: "Finance",
+    downloads: 2890,
+    icon: <MoneyIcon />
   }
 ];
 
 const ResourceLibrary = () => {
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" gutterBottom>
+      <Box sx={{ mb: 6, textAlign: 'center' }}>
+        <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
           Resource Library
         </Typography>
-        <Typography variant="subtitle1" color="text.secondary">
-          Download free templates, guides, and tools to help grow your service business
+        <Typography variant="subtitle1" color="text.secondary" sx={{ maxWidth: 700, mx: 'auto' }}>
+          Download professional templates, guides, and tools designed specifically for Muslim entrepreneurs to build and grow their service businesses.
         </Typography>
       </Box>
 
-      <Grid container spacing={3}>
+      <Grid container spacing={4}>
         {resources.map((resource) => (
           <Grid item xs={12} md={4} key={resource.id}>
-            <Card sx={{ height: '100%' }}>
-              <CardMedia
-                component="img"
-                height="200"
-                image={resource.image}
-                alt={resource.title}
-              />
-              <CardContent>
+            <Card sx={{ 
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: (theme) => theme.shadows[4]
+              }
+            }}>
+              <Box sx={{ 
+                height: 140, 
+                bgcolor: 'primary.main', 
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white'
+              }}>
+                {React.cloneElement(resource.icon, { sx: { fontSize: 60 } })}
+              </Box>
+              <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
                 <Box sx={{ mb: 2 }}>
                   <Chip 
                     icon={<DescriptionIcon />}
@@ -121,14 +139,14 @@ const ResourceLibrary = () => {
                     color="primary"
                     sx={{ mb: 1 }}
                   />
-                  <Typography variant="h6" gutterBottom>
+                  <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
                     {resource.title}
                   </Typography>
                   <Typography variant="body2" color="text.secondary" paragraph>
                     {resource.description}
                   </Typography>
                 </Box>
-                <List dense>
+                <List dense sx={{ mt: 'auto' }}>
                   <ListItem>
                     <ListItemIcon>
                       <DescriptionIcon fontSize="small" />
@@ -142,14 +160,18 @@ const ResourceLibrary = () => {
                     <ListItemIcon>
                       <CloudDownloadIcon fontSize="small" />
                     </ListItemIcon>
-                    <ListItemText primary={`${resource.downloads} downloads`} />
+                    <ListItemText primary={`${resource.downloads.toLocaleString()} downloads`} />
                   </ListItem>
                 </List>
                 <Button 
                   variant="contained" 
                   fullWidth 
                   startIcon={<DownloadIcon />}
-                  sx={{ mt: 2 }}
+                  sx={{ 
+                    mt: 2,
+                    textTransform: 'none',
+                    fontWeight: 600
+                  }}
                 >
                   Download {resource.format}
                 </Button>

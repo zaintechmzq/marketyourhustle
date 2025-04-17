@@ -1,16 +1,6 @@
 import { initializeApp, getApps } from 'firebase/app';
-import { 
-  getFirestore, 
-  initializeFirestore,
-  persistentLocalCache,
-  persistentSingleTabManager
-} from 'firebase/firestore';
-import { 
-  getAuth, 
-  setPersistence, 
-  browserLocalPersistence,
-  onAuthStateChanged 
-} from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { getStorage } from 'firebase/storage';
 import { getAnalytics } from 'firebase/analytics';
 
@@ -47,27 +37,16 @@ console.log('Initializing Firebase with config:', {
 // Initialize Firebase only if it hasn't been initialized already
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
-// Initialize Firestore with persistent cache
-const db = initializeFirestore(app, {
-  localCache: persistentLocalCache({
-    tabManager: persistentSingleTabManager()
-  })
-});
-
-// Initialize other services
+// Initialize services
+const db = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app);
 let analytics;
 
-// Set up auth persistence immediately
+// Set up auth persistence
 setPersistence(auth, browserLocalPersistence)
   .then(() => {
     console.log('Auth persistence enabled successfully');
-    
-    // Set up auth state listener for debugging
-    onAuthStateChanged(auth, (user) => {
-      console.log('Auth state changed:', user ? 'User is signed in' : 'User is signed out');
-    });
   })
   .catch((error) => {
     console.error('Error setting auth persistence:', error);

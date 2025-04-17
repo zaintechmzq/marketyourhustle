@@ -17,6 +17,7 @@ export interface User {
   badges?: string[];
   role?: 'user' | 'moderator' | 'admin';
   isVerified?: boolean;
+  hasFullAccess?: boolean;
 }
 
 export interface Reaction {

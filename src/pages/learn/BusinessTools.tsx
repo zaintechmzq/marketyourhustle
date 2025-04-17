@@ -27,7 +27,7 @@ const tools = [
     description: "Calculate potential revenue and profit margins for your service business.",
     icon: <MonetizationOnIcon />,
     category: "Finance",
-    path: "/tools/RevenueCalculator",
+    path: "/tools/revenue-calculator",
     image: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&auto=format&fit=crop&q=80'
   },
   {
@@ -36,7 +36,7 @@ const tools = [
     description: "Determine optimal pricing for your services based on market research and costs.",
     icon: <CalculateIcon />,
     category: "Finance",
-    path: "/tools/PricingStrategy",
+    path: "/tools/pricing-strategy",
     image: 'https://images.unsplash.com/photo-1633158829585-23ba8f7c8caf?w=800&auto=format&fit=crop&q=80'
   },
   {
@@ -45,7 +45,7 @@ const tools = [
     description: "Manage your service appointments and client bookings efficiently.",
     icon: <ScheduleIcon />,
     category: "Operations",
-    path: "/tools/AppointmentScheduler",
+    path: "/tools/appointment-scheduler",
     image: 'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=800&auto=format&fit=crop&q=80'
   },
   {
@@ -54,7 +54,7 @@ const tools = [
     description: "Track and analyze your business performance metrics.",
     icon: <AssessmentIcon />,
     category: "Analytics",
-    path: "/tools/BusinessAnalytics",
+    path: "/tools/business-analytics",
     image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80'
   },
   {
@@ -63,7 +63,7 @@ const tools = [
     description: "Plan and track your business growth milestones.",
     icon: <TimelineIcon />,
     category: "Planning",
-    path: "/tools/GrowthPlanner",
+    path: "/tools/growth-planner",
     image: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=800&auto=format&fit=crop&q=80'
   },
   {
@@ -72,7 +72,7 @@ const tools = [
     description: "Calculate the true cost of providing your services.",
     icon: <BuildIcon />,
     category: "Finance",
-    path: "/tools/CostCalculator",
+    path: "/tools/cost-calculator",
     image: 'https://images.unsplash.com/photo-1554224154-26032ffc0d07?w=800&auto=format&fit=crop&q=80'
   }
 ];
