@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
+import { AuthProvider } from './contexts/AuthContext';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Story from './pages/Story';
@@ -26,6 +27,9 @@ import ProfilePage from './pages/profile/ProfilePage';
 import LearningResources from './pages/learn/LearningResources';
 import ResourceLibrary from './pages/learn/ResourceLibrary';
 import BusinessTools from './pages/learn/BusinessTools';
+import MessagesPage from './pages/Messages';
+import PrivateRoute from './components/PrivateRoute';
+import BasicRoute from './components/BasicRoute';
 
 // Import tool components
 import RevenueCalculator from './pages/tools/RevenueCalculator';
@@ -117,299 +121,121 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Router>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route
-            path="/home"
-            element={
-              <AuthRoute>
+      <AuthProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/auth" element={<Auth />} />
+            
+            {/* Basic Access Route */}
+            <Route path="/home" element={
+              <BasicRoute>
                 <>
                   <Navbar />
                   <Home />
                 </>
-              </AuthRoute>
-            }
-          />
-          <Route
-            path="/learn"
-            element={
-              <AuthRoute>
-                <>
-                  <Navbar />
-                  <LearningResources />
-                </>
-              </AuthRoute>
-            }
-          />
-          <Route
-            path="/learn/muslim-owned-businesses"
-            element={
-              <AuthRoute>
-                <>
-                  <Navbar />
-                  <MuslimOwnedBusinesses />
-                </>
-              </AuthRoute>
-            }
-          />
-          <Route
-            path="/learn/articles/qahwah-house"
-            element={
-              <AuthRoute>
-                <>
-                  <Navbar />
-                  <QahwahHouse />
-                </>
-              </AuthRoute>
-            }
-          />
-          <Route
-            path="/learn/articles/qamaria"
-            element={
-              <AuthRoute>
-                <>
-                  <Navbar />
-                  <Qamaria />
-                </>
-              </AuthRoute>
-            }
-          />
-          <Route
-            path="/learn/articles/halal-guys"
-            element={
-              <AuthRoute>
-                <>
-                  <Navbar />
-                  <HalalGuys />
-                </>
-              </AuthRoute>
-            }
-          />
-          <Route
-            path="/learn/articles/car-detailing-business"
-            element={
-              <AuthRoute>
-                <>
-                  <Navbar />
-                  <CarDetailingBusiness />
-                </>
-              </AuthRoute>
-            }
-          />
-          <Route
-            path="/learn/articles/luxury-home-cleaning"
-            element={
-              <AuthRoute>
-                <>
-                  <Navbar />
-                  <LuxuryHomeCleaning />
-                </>
-              </AuthRoute>
-            }
-          />
-          <Route
-            path="/learn/articles/pet-grooming-van"
-            element={
-              <AuthRoute>
-                <>
-                  <Navbar />
-                  <PetGroomingVan />
-                </>
-              </AuthRoute>
-            }
-          />
-          <Route
-            path="/learn/articles/landscaping-business"
-            element={
-              <AuthRoute>
-                <>
-                  <Navbar />
-                  <LandscapingBusiness />
-                </>
-              </AuthRoute>
-            }
-          />
-          <Route
-            path="/learn/articles/balloon-garland-setup"
-            element={
-              <AuthRoute>
-                <>
-                  <Navbar />
-                  <BalloonGarlandSetup />
-                </>
-              </AuthRoute>
-            }
-          />
-          <Route
-            path="/learn/articles/business-automation-tools"
-            element={
-              <AuthRoute>
-                <>
-                  <Navbar />
-                  <BusinessAutomationTools />
-                </>
-              </AuthRoute>
-            }
-          />
-          <Route
-            path="/learn/articles/dog-walker-success"
-            element={
-              <AuthRoute>
-                <>
-                  <Navbar />
-                  <DogWalkerSuccess />
-                </>
-              </AuthRoute>
-            }
-          />
-          <Route
-            path="/community"
-            element={
-              <AuthRoute requireFirebaseAuth>
-                <>
-                  <Navbar />
-                  <CommunityHub />
-                </>
-              </AuthRoute>
-            }
-          />
-          <Route
-            path="/dashboard"
-            element={
-              <AuthRoute requireFirebaseAuth>
+              </BasicRoute>
+            } />
+
+            {/* Protected Routes */}
+            <Route path="/dashboard" element={
+              <PrivateRoute>
                 <>
                   <Navbar />
                   <Dashboard />
                 </>
-              </AuthRoute>
-            }
-          />
-          <Route
-            path="/story/:id"
-            element={
-              <AuthRoute requireFirebaseAuth>
+              </PrivateRoute>
+            } />
+
+            <Route path="/messages" element={
+              <PrivateRoute>
                 <>
                   <Navbar />
-                  <Story />
+                  <MessagesPage />
                 </>
-              </AuthRoute>
-            }
-          />
-          <Route
-            path="/category/:category"
-            element={
-              <AuthRoute requireFirebaseAuth>
+              </PrivateRoute>
+            } />
+
+            <Route path="/community" element={
+              <PrivateRoute>
                 <>
                   <Navbar />
-                  <Category />
+                  <CommunityHub />
                 </>
-              </AuthRoute>
-            }
-          />
-          <Route
-            path="/profile/:userId?"
-            element={
-              <AuthRoute requireFirebaseAuth>
+              </PrivateRoute>
+            } />
+
+            <Route path="/profile/:userId" element={
+              <PrivateRoute>
                 <>
                   <Navbar />
                   <ProfilePage />
                 </>
-              </AuthRoute>
-            }
-          />
-          <Route
-            path="/learn/resources"
-            element={
-              <AuthRoute>
+              </PrivateRoute>
+            } />
+
+            {/* Learning Resources Routes */}
+            <Route path="/learn/*" element={
+              <PrivateRoute>
                 <>
                   <Navbar />
-                  <ResourceLibrary />
+                  <Routes>
+                    <Route index element={<LearningResources />} />
+                    <Route path="muslim-owned-businesses" element={<MuslimOwnedBusinesses />} />
+                    <Route path="articles/qahwah-house" element={<QahwahHouse />} />
+                    <Route path="articles/qamaria" element={<Qamaria />} />
+                    <Route path="articles/halal-guys" element={<HalalGuys />} />
+                    <Route path="articles/car-detailing-business" element={<CarDetailingBusiness />} />
+                    <Route path="articles/luxury-home-cleaning" element={<LuxuryHomeCleaning />} />
+                    <Route path="articles/pet-grooming-van" element={<PetGroomingVan />} />
+                    <Route path="articles/landscaping-business" element={<LandscapingBusiness />} />
+                    <Route path="articles/balloon-garland-setup" element={<BalloonGarlandSetup />} />
+                    <Route path="articles/business-automation-tools" element={<BusinessAutomationTools />} />
+                    <Route path="articles/dog-walker-success" element={<DogWalkerSuccess />} />
+                    <Route path="resource-library" element={<ResourceLibrary />} />
+                    <Route path="tools" element={<BusinessTools />} />
+                  </Routes>
                 </>
-              </AuthRoute>
-            }
-          />
-          <Route
-            path="/learn/tools"
-            element={
-              <AuthRoute>
+              </PrivateRoute>
+            } />
+
+            {/* Tools Routes */}
+            <Route path="/tools/*" element={
+              <PrivateRoute>
                 <>
                   <Navbar />
-                  <BusinessTools />
+                  <Routes>
+                    <Route path="revenue-calculator" element={<RevenueCalculator />} />
+                    <Route path="pricing-strategy" element={<PricingStrategy />} />
+                    <Route path="appointment-scheduler" element={<AppointmentScheduler />} />
+                    <Route path="business-analytics" element={<BusinessAnalytics />} />
+                    <Route path="growth-planner" element={<GrowthPlanner />} />
+                    <Route path="cost-calculator" element={<CostCalculator />} />
+                  </Routes>
                 </>
-              </AuthRoute>
-            }
-          />
-          {/* Tool Routes */}
-          <Route
-            path="/tools/RevenueCalculator"
-            element={
-              <AuthRoute>
+              </PrivateRoute>
+            } />
+
+            {/* Category and Story Routes */}
+            <Route path="/category/:id" element={
+              <PrivateRoute>
                 <>
                   <Navbar />
-                  <RevenueCalculator />
+                  <Category />
                 </>
-              </AuthRoute>
-            }
-          />
-          <Route
-            path="/tools/PricingStrategy"
-            element={
-              <AuthRoute>
+              </PrivateRoute>
+            } />
+            <Route path="/story/:id" element={
+              <PrivateRoute>
                 <>
                   <Navbar />
-                  <PricingStrategy />
+                  <Story />
                 </>
-              </AuthRoute>
-            }
-          />
-          <Route
-            path="/tools/AppointmentScheduler"
-            element={
-              <AuthRoute>
-                <>
-                  <Navbar />
-                  <AppointmentScheduler />
-                </>
-              </AuthRoute>
-            }
-          />
-          <Route
-            path="/tools/BusinessAnalytics"
-            element={
-              <AuthRoute>
-                <>
-                  <Navbar />
-                  <BusinessAnalytics />
-                </>
-              </AuthRoute>
-            }
-          />
-          <Route
-            path="/tools/GrowthPlanner"
-            element={
-              <AuthRoute>
-                <>
-                  <Navbar />
-                  <GrowthPlanner />
-                </>
-              </AuthRoute>
-            }
-          />
-          <Route
-            path="/tools/CostCalculator"
-            element={
-              <AuthRoute>
-                <>
-                  <Navbar />
-                  <CostCalculator />
-                </>
-              </AuthRoute>
-            }
-          />
-        </Routes>
-      </Router>
+              </PrivateRoute>
+            } />
+          </Routes>
+        </Router>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

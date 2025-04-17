@@ -7,6 +7,7 @@ export const createUserProfile = async (user: {
   email: string;
   displayName?: string | null;
   photoURL?: string | null;
+  hasFullAccess?: boolean;
 }) => {
   try {
     const userRef = doc(db, 'users', user.uid);
@@ -24,6 +25,7 @@ export const createUserProfile = async (user: {
         badges: [],
         role: 'user',
         isVerified: false,
+        hasFullAccess: user.hasFullAccess || false,
         bio: '',
         businessType: '',
         website: '',

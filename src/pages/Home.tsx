@@ -1,5 +1,5 @@
-import React from 'react';
-import { Box, Container, Typography, Grid, Paper, Button, TextField, Divider, IconButton, Card, CardMedia, CardContent } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { Box, Container, Typography, Grid, Paper, Button, TextField, Divider, IconButton, Card, CardMedia, CardContent, Alert } from '@mui/material';
 import { motion } from 'framer-motion';
 import { 
   TrendingUp as TrendingUpIcon, 
@@ -17,6 +17,8 @@ import TwitterIcon from '@mui/icons-material/Twitter';
 import InstagramIcon from '@mui/icons-material/Instagram';
 import LinkedInIcon from '@mui/icons-material/LinkedIn';
 import { Link as RouterLink } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { auth } from '../firebase/config';
 
 // Import local images
 import qawahHouseImg from '../assets/images/qawahhouse.jpg';
@@ -50,6 +52,28 @@ const quickStartLinks = [
 ];
 
 const Home = () => {
+  const [isBasicUser, setIsBasicUser] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check if user has basic access (email only) and is not fully authenticated
+    const storedEmail = localStorage.getItem('userEmail');
+    const isFullUser = auth.currentUser;
+
+    if (storedEmail && !isFullUser) {
+      setIsBasicUser(true);
+      setUserEmail(storedEmail);
+    } else {
+      setIsBasicUser(false);
+    }
+
+    // If no email in localStorage and not authenticated, redirect to landing
+    if (!storedEmail && !isFullUser) {
+      navigate('/', { replace: true });
+    }
+  }, [auth.currentUser]); // Add auth.currentUser as dependency to update when auth state changes
+
   const featuredStories = [
     {
       title: "AutoShine Pro",
@@ -135,6 +159,41 @@ const Home = () => {
 
   return (
     <Box sx={{ bgcolor: 'background.paper', minHeight: '100vh' }}>
+      {/* Enhanced User Welcome Banner */}
+      {isBasicUser && (
+        <Box sx={{ 
+          bgcolor: 'primary.main', 
+          color: 'primary.contrastText',
+          py: 2,
+          px: 3,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 2,
+          flexWrap: 'wrap'
+        }}>
+          <Typography variant="body1" sx={{ textAlign: 'center' }}>
+            🚀 Unlock premium features: Business tools, community access, and expert networking!
+          </Typography>
+          <Button
+            variant="contained"
+            color="secondary"
+            component={RouterLink}
+            to="/auth"
+            sx={{ 
+              borderRadius: '8px',
+              textTransform: 'none',
+              fontSize: '0.9rem',
+              whiteSpace: 'nowrap',
+              fontWeight: 600,
+              px: 3
+            }}
+          >
+            Get Full Access
+          </Button>
+        </Box>
+      )}
+
       {/* Hero Section */}
       <Box sx={{ 
         py: { xs: 8, md: 12 },
@@ -173,19 +232,35 @@ const Home = () => {
             </Typography>
 
             <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
-              <Button 
-                variant="contained" 
-                size="large"
-                component={RouterLink}
-                to="/community"
-                sx={{ 
-                  borderRadius: '8px',
-                  textTransform: 'none',
-                  fontSize: '1rem'
-                }}
-              >
-                Join Our Community
-              </Button>
+              {isBasicUser ? (
+                <Button 
+                  variant="contained" 
+                  size="large"
+                  component={RouterLink}
+                  to="/auth"
+                  sx={{ 
+                    borderRadius: '8px',
+                    textTransform: 'none',
+                    fontSize: '1rem'
+                  }}
+                >
+                  Create Full Account
+                </Button>
+              ) : (
+                <Button 
+                  variant="contained" 
+                  size="large"
+                  component={RouterLink}
+                  to="/community"
+                  sx={{ 
+                    borderRadius: '8px',
+                    textTransform: 'none',
+                    fontSize: '1rem'
+                  }}
+                >
+                  Join Our Community
+                </Button>
+              )}
               <Button 
                 variant="outlined" 
                 size="large"

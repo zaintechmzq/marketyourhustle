@@ -17,8 +17,10 @@ import {
   CardContent,
   Alert,
   CircularProgress,
-  Grid
+  Grid,
+  Divider
 } from '@mui/material';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -29,14 +31,36 @@ const Auth = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState(auth.currentUser);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check for stored email from landing page
+    const storedEmail = localStorage.getItem('userEmail');
+    if (storedEmail) {
+      setEmail(storedEmail);
+    }
+
+    // Set initial isSignUp state from location state
+    const state = location.state as { isSignUp?: boolean; from?: string };
+    if (state?.isSignUp !== undefined) {
+      setIsSignUp(state.isSignUp);
+    }
+  }, [location]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
+      if (user) {
+        // Get the return path from location state, default to home
+        const state = location.state as { from?: string };
+        const returnTo = state?.from || '/home';
+        navigate(returnTo, { replace: true });
+      }
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [navigate, location]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,7 +82,8 @@ const Auth = () => {
           uid: userCredential.user.uid,
           email: userCredential.user.email!,
           displayName: displayName,
-          photoURL: userCredential.user.photoURL
+          photoURL: userCredential.user.photoURL,
+          hasFullAccess: true // Mark as full access user
         });
       } else {
         await signInWithEmailAndPassword(auth, email, password);
@@ -74,25 +99,29 @@ const Auth = () => {
     }
   };
 
-  const handleSignOut = async () => {
-    try {
-      await signOut(auth);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    }
-  };
-
   if (user) {
     return (
       <Card sx={{ maxWidth: 400, mx: 'auto', mt: 4 }}>
         <CardContent>
           <Typography variant="h6" gutterBottom>
-            Welcome, {user.displayName || user.email}!
+            Welcome back, {user.displayName || user.email}!
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            You now have full access to all features.
           </Typography>
           <Button 
             variant="contained" 
             color="primary" 
-            onClick={handleSignOut}
+            onClick={() => navigate('/home')}
+            fullWidth
+            sx={{ mb: 1 }}
+          >
+            Go to Home
+          </Button>
+          <Button 
+            variant="outlined" 
+            color="primary" 
+            onClick={() => signOut(auth)}
             fullWidth
           >
             Sign Out
@@ -106,7 +135,12 @@ const Auth = () => {
     <Card sx={{ maxWidth: 400, mx: 'auto', mt: 4 }}>
       <CardContent>
         <Typography variant="h5" gutterBottom>
-          {isSignUp ? 'Create Account' : 'Sign In'}
+          {isSignUp ? 'Create Full Account' : 'Welcome Back'}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+          {isSignUp 
+            ? 'Create a full account to access all features including messaging, community, and tools.' 
+            : 'Sign in to access your full account features.'}
         </Typography>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -143,6 +177,7 @@ const Auth = () => {
             onChange={(e) => setEmail(e.target.value)}
             required
             fullWidth
+            disabled={!!localStorage.getItem('userEmail')}
           />
           <TextField
             label="Password"
@@ -158,11 +193,13 @@ const Auth = () => {
             color="primary"
             disabled={loading}
             fullWidth
+            sx={{ mt: 1 }}
           >
-            {loading ? <CircularProgress size={24} /> : (isSignUp ? 'Sign Up' : 'Sign In')}
+            {loading ? <CircularProgress size={24} /> : (isSignUp ? 'Create Account' : 'Sign In')}
           </Button>
+          <Divider sx={{ my: 1 }}>or</Divider>
           <Button 
-            variant="text" 
+            variant="outlined" 
             onClick={() => {
               setIsSignUp(!isSignUp);
               setError(null);

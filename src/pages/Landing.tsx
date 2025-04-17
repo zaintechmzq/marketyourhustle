@@ -78,7 +78,8 @@ const Landing = () => {
       const docRef = await addDoc(collection(db, 'emailEntries'), {
         email,
         createdAt: serverTimestamp(),
-        userAgent: navigator.userAgent
+        userAgent: navigator.userAgent,
+        hasFullAccess: false
       });
       localStorage.setItem('userEmail', email);
       navigate('/home', { replace: true });
@@ -201,7 +202,6 @@ const Landing = () => {
                   <TextField
                     fullWidth
                     placeholder="Enter your email to get started"
-                    variant="outlined"
                     value={email}
                     onChange={(e) => {
                       setEmail(e.target.value);
@@ -209,52 +209,51 @@ const Landing = () => {
                     }}
                     error={!!error}
                     helperText={error}
-                    sx={{ 
-                      bgcolor: 'transparent',
+                    sx={{
                       '& .MuiOutlinedInput-root': {
-                        fontSize: { xs: '0.95rem', sm: '1rem' },
-                        '& fieldset': {
-                          borderColor: 'rgba(0, 0, 0, 0.15)',
-                        },
-                      },
-                      '& .MuiFormHelperText-root': {
-                        fontSize: { xs: '0.75rem', sm: '0.8rem' },
-                        marginLeft: 0
+                        bgcolor: 'white',
                       }
                     }}
                   />
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    size={isMobile ? "medium" : "large"}
-                    disabled={isSubmitting}
-                    sx={{
-                      px: { xs: 3, sm: 6 },
-                      py: { xs: 1.25, sm: 2 },
-                      bgcolor: '#FF7F50',
-                      '&:hover': {
-                        bgcolor: '#FF6B3D',
-                      },
-                      borderRadius: { xs: 1.5, sm: 2 },
-                      textTransform: 'none',
-                      fontSize: { xs: '1rem', sm: '1.1rem' },
-                      whiteSpace: 'nowrap',
-                      alignSelf: { xs: 'stretch', sm: 'center' }
-                    }}
-                  >
-                    {isSubmitting ? 'Joining...' : 'Get Started'}
-                  </Button>
+                  <Box sx={{ display: 'flex', gap: 1, flexDirection: { xs: 'column', sm: 'row' } }}>
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      color="primary"
+                      disabled={isSubmitting}
+                      sx={{
+                        px: { xs: 3, sm: 4 },
+                        py: { xs: 1, sm: 1.5 },
+                        whiteSpace: 'nowrap',
+                        minWidth: { xs: '100%', sm: 'auto' }
+                      }}
+                    >
+                      {isSubmitting ? 'Please wait...' : 'Get Started'}
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      onClick={() => navigate('/auth')}
+                      sx={{
+                        px: { xs: 3, sm: 4 },
+                        py: { xs: 1, sm: 1.5 },
+                        whiteSpace: 'nowrap',
+                        minWidth: { xs: '100%', sm: 'auto' }
+                      }}
+                    >
+                      Sign In
+                    </Button>
+                  </Box>
                 </Paper>
-
                 <Typography
                   variant="body2"
                   sx={{
-                    mt: { xs: 1.5, sm: 2 },
+                    mt: 2,
                     color: 'rgba(255, 255, 255, 0.7)',
-                    fontSize: { xs: '0.85rem', sm: '0.95rem' }
+                    textAlign: 'center'
                   }}
                 >
-                  Join 5,000+ entrepreneurs who receive our weekly insights.
+                  Join 6,000+ entrepreneurs who receive our weekly insights.
                 </Typography>
               </Box>
             </motion.div>

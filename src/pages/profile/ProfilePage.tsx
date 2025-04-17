@@ -38,6 +38,7 @@ import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from '../../firebase/config';
 import { onAuthStateChanged } from 'firebase/auth';
 import EditProfileDialog from '../../components/EditProfileDialog';
+import { getOrCreateConversation, sendMessage } from '../../utils/messaging';
 
 interface UserProfile {
   uid: string;
@@ -289,17 +290,21 @@ const ProfilePage = () => {
     if (!currentUser || !profile || !messageText.trim()) return;
     
     try {
-      const messageRef = doc(db, 'messages', `${currentUser.uid}_${profile.uid}`);
-      await setDoc(messageRef, {
-        senderId: currentUser.uid,
-        receiverId: profile.uid,
-        text: messageText,
-        timestamp: serverTimestamp(),
-        read: false
-      });
+      const conversationId = await getOrCreateConversation(currentUser.uid, profile.uid);
+      
+      // Send the message
+      await sendMessage(
+        conversationId, 
+        currentUser.uid, 
+        profile.uid, 
+        messageText.trim()
+      );
       
       setMessageText('');
       setShowMessageDialog(false);
+      
+      // Navigate to messages page
+      navigate('/messages');
     } catch (error) {
       console.error('Error sending message:', error);
     }

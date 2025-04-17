@@ -73,5 +73,36 @@ service cloud.firestore {
       allow create, update: if isOwner(userId);
       allow delete: if false; // Don't allow user deletion through client
     }
+    
+    // Conversations collection - for direct messaging
+    match /conversations/{conversationId} {
+      // Allow read if user is a participant
+      allow read: if isAuthenticated() && 
+                  resource.data.participants.hasAny([request.auth.uid]);
+      
+      // Allow create if user is a participant
+      allow create: if isAuthenticated() && 
+                   request.resource.data.participants.hasAny([request.auth.uid]);
+      
+      // Allow update for read status and new messages
+      allow update: if isAuthenticated() && 
+                   resource.data.participants.hasAny([request.auth.uid]);
+      
+      // Messages subcollection
+      match /messages/{messageId} {
+        allow read: if isAuthenticated() && 
+                   get(/databases/$(database)/documents/conversations/$(conversationId))
+                     .data.participants.hasAny([request.auth.uid]);
+        
+        allow create: if isAuthenticated() && 
+                     get(/databases/$(database)/documents/conversations/$(conversationId))
+                       .data.participants.hasAny([request.auth.uid]) &&
+                     request.resource.data.senderId == request.auth.uid;
+        
+        allow update: if isAuthenticated() && 
+                     get(/databases/$(database)/documents/conversations/$(conversationId))
+                       .data.participants.hasAny([request.auth.uid]);
+      }
+    }
   }
 } 

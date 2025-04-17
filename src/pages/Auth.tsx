@@ -9,6 +9,8 @@ import {
   useTheme,
   Divider,
   Alert,
+  Tab,
+  Tabs
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -19,18 +21,45 @@ import {
   signInWithPopup,
   updateProfile,
 } from 'firebase/auth';
-import { auth } from '../firebase/config';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { auth, db } from '../firebase/config';
+
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`auth-tabpanel-${index}`}
+      aria-labelledby={`auth-tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+    </div>
+  );
+}
 
 const Auth = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  const [tabValue, setTabValue] = useState(0);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const theme = useTheme();
+
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue);
+    setError('');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,18 +67,26 @@ const Auth = () => {
     setIsSubmitting(true);
 
     try {
-      if (isLogin) {
+      if (tabValue === 0) {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // Check if user document exists, if not create it
         await signInWithEmailAndPassword(auth, email, password);
       } else {
-        // Create user with email and password
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        // Update profile with name
         await updateProfile(userCredential.user, {
-          displayName: name
+          displayName: displayName
+        });
+
+        await setDoc(doc(db, 'users', userCredential.user.uid), {
+          uid: userCredential.user.uid,
+          email: userCredential.user.email,
+          displayName: displayName,
+          createdAt: new Date().toISOString()
         });
       }
       
-      // Get the return URL from location state or default to home
       const from = (location.state as any)?.from || '/home';
       navigate(from, { replace: true });
     } catch (err: any) {
@@ -65,7 +102,6 @@ const Auth = () => {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       
-      // If this is a new user (no display name), prompt for name
       if (!result.user.displayName) {
         const name = prompt('Please enter your name:');
         if (name) {
@@ -120,7 +156,7 @@ const Auth = () => {
                 mb: 3,
               }}
             >
-              {isLogin ? 'Welcome Back' : 'Create Account'}
+              {tabValue === 0 ? 'Welcome Back' : 'Create Account'}
             </Typography>
 
             {error && (
@@ -129,60 +165,80 @@ const Auth = () => {
               </Alert>
             )}
 
-            <form onSubmit={handleSubmit}>
-              {!isLogin && (
+            <Tabs value={tabValue} onChange={handleTabChange} aria-label="auth tabs">
+              <Tab label="Sign In" />
+              <Tab label="Sign Up" />
+            </Tabs>
+
+            <TabPanel value={tabValue} index={0}>
+              <form onSubmit={handleSubmit}>
                 <TextField
                   fullWidth
-                  label="Full Name"
-                  variant="outlined"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  sx={{ mb: 2 }}
-                  disabled={isSubmitting}
+                  label="Email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  margin="normal"
                   required
                 />
-              )}
-              
-              <TextField
-                fullWidth
-                label="Email"
-                type="email"
-                variant="outlined"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                sx={{ mb: 2 }}
-                disabled={isSubmitting}
-                required
-              />
-              
-              <TextField
-                fullWidth
-                label="Password"
-                type="password"
-                variant="outlined"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                sx={{ mb: 3 }}
-                disabled={isSubmitting}
-                required
-              />
-              
-              <Button
-                type="submit"
-                variant="contained"
-                size="large"
-                fullWidth
-                disabled={isSubmitting}
-                sx={{
-                  py: 1.5,
-                  borderRadius: 2,
-                  textTransform: 'none',
-                  fontSize: '1.1rem',
-                }}
-              >
-                {isSubmitting ? 'Processing...' : isLogin ? 'Sign In' : 'Sign Up'}
-              </Button>
-            </form>
+                <TextField
+                  fullWidth
+                  label="Password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  margin="normal"
+                  required
+                />
+                <Button
+                  type="submit"
+                  variant="contained"
+                  fullWidth
+                  sx={{ mt: 2 }}
+                >
+                  {isSubmitting ? 'Processing...' : tabValue === 0 ? 'Sign In' : 'Sign Up'}
+                </Button>
+              </form>
+            </TabPanel>
+
+            <TabPanel value={tabValue} index={1}>
+              <form onSubmit={handleSubmit}>
+                <TextField
+                  fullWidth
+                  label="Display Name"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  margin="normal"
+                  required
+                />
+                <TextField
+                  fullWidth
+                  label="Email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  margin="normal"
+                  required
+                />
+                <TextField
+                  fullWidth
+                  label="Password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  margin="normal"
+                  required
+                />
+                <Button
+                  type="submit"
+                  variant="contained"
+                  fullWidth
+                  sx={{ mt: 2 }}
+                >
+                  {isSubmitting ? 'Processing...' : 'Sign Up'}
+                </Button>
+              </form>
+            </TabPanel>
 
             <Divider sx={{ my: 3 }}>or</Divider>
 
@@ -209,11 +265,11 @@ const Auth = () => {
               variant="body1"
               sx={{ mt: 3, color: 'text.secondary' }}
             >
-              {isLogin ? "Don't have an account?" : "Already have an account?"}{' '}
+              {tabValue === 0 ? "Don't have an account?" : "Already have an account?"}{' '}
               <Button
                 onClick={() => {
-                  setIsLogin(!isLogin);
-                  setName(''); // Clear name when switching modes
+                  setTabValue(1);
+                  setDisplayName('');
                 }}
                 sx={{
                   textTransform: 'none',
@@ -223,7 +279,7 @@ const Auth = () => {
                   },
                 }}
               >
-                {isLogin ? 'Sign Up' : 'Sign In'}
+                {tabValue === 0 ? 'Sign Up' : 'Sign In'}
               </Button>
             </Typography>
 

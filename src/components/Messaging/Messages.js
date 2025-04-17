@@ -137,9 +137,11 @@ const Messages = () => {
   }, [activeConversation]);
 
   const scrollToBottom = () => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
+    setTimeout(() => {
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 100);
   };
 
   const handleSendMessage = async (e) => {
@@ -147,27 +149,36 @@ const Messages = () => {
     
     if (!newMessage.trim() || !activeConversation || !currentUser) return;
     
+    const messageText = newMessage.trim();
+    setNewMessage(''); // Clear input immediately for better UX
+    
     try {
       // Add message to subcollection
       await addDoc(collection(db, 'conversations', activeConversation.id, 'messages'), {
         senderId: currentUser.uid,
-        text: newMessage,
+        text: messageText,
         timestamp: serverTimestamp()
       });
       
       // Update conversation doc
       await updateDoc(doc(db, 'conversations', activeConversation.id), {
-        lastMessage: newMessage,
+        lastMessage: messageText,
         lastMessageTimestamp: serverTimestamp(),
         lastSenderId: currentUser.uid,
         [`readBy.${activeConversation.otherUserId}`]: false
       });
       
-      setNewMessage('');
+      // Force scroll to bottom
+      scrollToBottom();
     } catch (err) {
       console.error('Error sending message:', err);
     }
   };
+
+  // Add effect to scroll to bottom when messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages.length]);
 
   const handleConversationSelect = (conversation) => {
     setActiveConversation(conversation);
@@ -199,7 +210,7 @@ const Messages = () => {
   }
 
   return (
-    <Box sx={{ height: { xs: 'calc(100vh - 120px)', md: 'calc(100vh - 180px)' }, p: 2 }}>
+    <Box sx={{ height: '100%', p: { xs: 1, sm: 2 } }}>
       <Paper 
         elevation={3} 
         sx={{ 
@@ -249,6 +260,7 @@ const Messages = () => {
                         selected={activeConversation?.id === conversation.id}
                         onClick={() => handleConversationSelect(conversation)}
                         sx={{
+                          py: 1.5,
                           bgcolor: activeConversation?.id === conversation.id ? 
                             `${theme.palette.primary.main}15` : 'inherit',
                           '&:hover': {
@@ -261,6 +273,7 @@ const Messages = () => {
                           <Avatar 
                             src={conversation.otherUserPhoto} 
                             alt={conversation.otherUserName}
+                            sx={{ width: 45, height: 45 }}
                           >
                             {conversation.otherUserName?.[0]}
                           </Avatar>
@@ -269,7 +282,8 @@ const Messages = () => {
                           primary={
                             <Typography 
                               variant="subtitle2" 
-                              fontWeight={conversation.unread ? 'bold' : 'normal'}
+                              fontWeight={conversation.unread ? 700 : 500}
+                              sx={{ mb: 0.3 }}
                             >
                               {conversation.otherUserName}
                             </Typography>
@@ -280,6 +294,7 @@ const Messages = () => {
                               sx={{
                                 display: 'flex',
                                 justifyContent: 'space-between',
+                                alignItems: 'center'
                               }}
                             >
                               <Typography
@@ -290,7 +305,8 @@ const Messages = () => {
                                   whiteSpace: 'nowrap',
                                   maxWidth: '120px',
                                   color: conversation.unread ? 'text.primary' : 'text.secondary',
-                                  fontWeight: conversation.unread ? 'medium' : 'normal'
+                                  fontWeight: conversation.unread ? 600 : 400,
+                                  fontSize: '0.8rem'
                                 }}
                               >
                                 {conversation.lastMessage || 'No messages yet'}
@@ -298,6 +314,7 @@ const Messages = () => {
                               <Typography
                                 variant="caption"
                                 color="text.secondary"
+                                sx={{ ml: 1, fontSize: '0.75rem', flexShrink: 0 }}
                               >
                                 {formatMessageDate(conversation.timestamp)}
                               </Typography>
@@ -372,7 +389,10 @@ const Messages = () => {
                       flexGrow: 1, 
                       overflow: 'auto', 
                       p: 2, 
-                      bgcolor: theme.palette.grey[50]
+                      bgcolor: theme.palette.grey[50],
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'flex-end'
                     }}
                   >
                     {messages.length === 0 ? (
@@ -387,49 +407,62 @@ const Messages = () => {
                         </Typography>
                       </Box>
                     ) : (
-                      messages.map((message) => (
-                        <Box
-                          key={message.id}
-                          sx={{
-                            display: 'flex',
-                            justifyContent: message.isCurrentUser ? 'flex-end' : 'flex-start',
-                            mb: 2
-                          }}
-                        >
-                          {!message.isCurrentUser && (
-                            <Avatar
-                              src={activeConversation.otherUserPhoto}
-                              alt={activeConversation.otherUserName}
-                              sx={{ width: 32, height: 32, mr: 1, mt: 1 }}
-                            >
-                              {activeConversation.otherUserName?.[0]}
-                            </Avatar>
-                          )}
-                          <Box>
-                            <Paper
-                              elevation={1}
-                              sx={{
-                                p: 2,
-                                maxWidth: '70%',
-                                borderRadius: 2,
-                                bgcolor: message.isCurrentUser ? theme.palette.primary.main : theme.palette.background.paper,
-                                color: message.isCurrentUser ? theme.palette.primary.contrastText : 'inherit'
-                              }}
-                            >
-                              <Typography variant="body1">{message.text}</Typography>
-                            </Paper>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                              sx={{ display: 'block', mt: 0.5, textAlign: message.isCurrentUser ? 'right' : 'left' }}
-                            >
-                              {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </Typography>
+                      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                        {messages.map((message) => (
+                          <Box
+                            key={message.id}
+                            sx={{
+                              display: 'flex',
+                              justifyContent: message.isCurrentUser ? 'flex-end' : 'flex-start',
+                              mb: 2
+                            }}
+                          >
+                            {!message.isCurrentUser && (
+                              <Avatar
+                                src={activeConversation.otherUserPhoto}
+                                alt={activeConversation.otherUserName}
+                                sx={{ width: 32, height: 32, mr: 1, mt: 1 }}
+                              >
+                                {activeConversation.otherUserName?.[0]}
+                              </Avatar>
+                            )}
+                            <Box sx={{ maxWidth: '70%' }}>
+                              <Paper
+                                elevation={1}
+                                sx={{
+                                  p: 1.5,
+                                  borderRadius: message.isCurrentUser ? 
+                                    '18px 18px 4px 18px' : '18px 18px 18px 4px',
+                                  wordBreak: 'break-word',
+                                  whiteSpace: 'pre-wrap',
+                                  bgcolor: message.isCurrentUser ? theme.palette.primary.main : theme.palette.background.paper,
+                                  color: message.isCurrentUser ? theme.palette.primary.contrastText : 'inherit',
+                                  boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                                }}
+                              >
+                                <Typography 
+                                  variant="body1" 
+                                  sx={{ 
+                                    fontSize: '0.95rem', 
+                                    lineHeight: 1.4 
+                                  }}
+                                >
+                                  {message.text}
+                                </Typography>
+                              </Paper>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                sx={{ display: 'block', mt: 0.5, textAlign: message.isCurrentUser ? 'right' : 'left' }}
+                              >
+                                {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </Typography>
+                            </Box>
                           </Box>
-                        </Box>
-                      ))
+                        ))}
+                        <div ref={messagesEndRef} />
+                      </Box>
                     )}
-                    <div ref={messagesEndRef} />
                   </Box>
                   
                   {/* Message Input */}
@@ -451,7 +484,18 @@ const Messages = () => {
                       size="small"
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
-                      sx={{ mr: 1 }}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSendMessage(e);
+                        }
+                      }}
+                      sx={{ 
+                        mr: 1,
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 4
+                        }
+                      }}
                       autoComplete="off"
                     />
                     <Button
@@ -460,9 +504,14 @@ const Messages = () => {
                       endIcon={<SendIcon />}
                       disabled={!newMessage.trim()}
                       type="submit"
-                      sx={{ minWidth: '120px' }}
+                      sx={{ 
+                        minWidth: { xs: 'auto', sm: '120px' },
+                        px: { xs: 2, sm: 3 },
+                        py: 1,
+                        borderRadius: 3
+                      }}
                     >
-                      Send
+                      {!isMobile ? 'Send' : ''}
                     </Button>
                   </Box>
                 </>
@@ -488,4 +537,4 @@ const Messages = () => {
   );
 };
 
-export default Messages;
+export default Messages; 
